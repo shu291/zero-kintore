@@ -170,6 +170,14 @@ nav.tabs button[aria-current="true"]{color:var(--acc)}
 .fig .ground{stroke:var(--line);stroke-width:2}
 .fig .hi{stroke:var(--acc)}
 .fig .propline{stroke:var(--dim2);stroke-width:3;stroke-linecap:round;fill:none}
+.fig .eye{fill:var(--bg2)}
+.fig .nose{stroke:var(--fg);stroke-width:3.2;stroke-linecap:round}
+.fig .band{stroke:var(--acc);stroke-width:2;stroke-linecap:round;fill:none}
+.fig .gear{fill:var(--acc);stroke:none}
+.mbrow{display:flex;gap:8px;align-items:center;margin:6px 0}
+.mbrow .check{flex:0 0 118px;margin:0;padding:9px 10px;font-size:13px}
+.mbrow select{flex:1;padding:10px;font-size:14px}
+.mbrow.off select{opacity:.4}
 .figbig{width:100%;max-width:360px;margin:0 auto;aspect-ratio:16/10;background:var(--bg2);border-radius:16px;border:1px solid var(--line);overflow:hidden}
 
 /* ---------- exec overlay ---------- */
@@ -382,11 +390,13 @@ const PATTERNS = {
 const PAT_ORDER = ['push','vpush','pull','squat','lunge','hinge','core'];
 
 const EQUIP = {
-  chair:{name:'椅子・机・ベッドのふち', desc:'ほとんどの人が持っているはず'},
-  towel:{name:'タオル＋丈夫なドア',     desc:'ドアノブにタオルを掛けて「引く」練習に使う'},
-  table:{name:'下にもぐれる丈夫なテーブル', desc:'背中を鍛えるテーブルロウに使う'},
-  bar  :{name:'鉄棒・懸垂バー',          desc:'公園の鉄棒でもOK'},
-  db   :{name:'ダンベル・重いペットボトル', desc:'2Lペットボトルに水を入れれば約2kg'},
+  chair:{emoji:'🪑',name:'椅子・机・ベッドのふち', desc:'ほとんどの人が持っているはず'},
+  towel:{emoji:'🚪',name:'タオル＋丈夫なドア',     desc:'ドアノブにタオルを掛けて「引く」練習に使う'},
+  table:{emoji:'🪵',name:'下にもぐれる丈夫なテーブル', desc:'背中を鍛えるテーブルロウに使う'},
+  bar  :{emoji:'🧗',name:'鉄棒・懸垂バー',          desc:'公園の鉄棒でもOK'},
+  db   :{emoji:'🏋️',name:'ダンベル・重いペットボトル', desc:'2Lペットボトルに水を入れれば約2kg'},
+  band :{emoji:'➰',name:'トレーニングチューブ',     desc:'100均のゴムチューブでもOK。ドアノブに掛けて使う'},
+  bag  :{emoji:'🎒',name:'重りを入れたリュック',     desc:'本やペットボトルを入れれば「重り」になる'},
 };
 
 /* ---------- 種目 ---------- */
@@ -639,6 +649,80 @@ const EX = [
  how:['バーにぶら下がる','反動を使わず、ひざを胸に引き上げる','ゆっくり下ろす'],
  miss:['体を振る','肩がすくむ'],
  easy:'ひざの高さを低くする',hard:'脚を伸ばして上げる'},
+
+/* ===== 道具を使う種目（同じ段の「道具あり版」。設定の「道具を優先」がオンなら自動でこちらが選ばれる） ===== */
+{id:'push3b',pat:'push',lv:3,name:'バンド・チェストプレス',kind:'reps',range:[10,15],need:'band',fig:'bandpress',
+ desc:'ドアに掛けたチューブを前に押す。胸の基本の動きを道具で。',
+ how:['チューブをドアの高い所に掛けるか背中に回して、両端を胸の横で持つ','ドアに背を向けて一歩前に出て、チューブを張る','胸の前でこぶしを合わせるように前に押す','2秒かけて戻す'],
+ miss:['腰が反る','肩がすくむ'],easy:'ドアに近づく',hard:'ドアから離れる・チューブを二重に'},
+{id:'push4b',pat:'push',lv:4,name:'ダンベル・フロアプレス',kind:'reps',range:[8,15],need:'db',fig:'dbpress',
+ desc:'床にあおむけでダンベルを押し上げる。ベンチがなくてもできる胸の種目。',
+ how:['あおむけでひざを立て、ダンベルを胸の横で持つ。ひじは床につける','胸の真上に押し上げ、上でダンベルを寄せる','ひじが床にふれるまで2秒かけて下ろす'],
+ miss:['腰が反る','手首が反る（こぶしをまっすぐ）'],easy:'軽くする',hard:'重くする・下で1秒止める'},
+{id:'push5b',pat:'push',lv:5,name:'椅子ディップス',kind:'reps',range:[8,15],need:'chair',fig:'dips',
+ desc:'椅子のふちに手をついて体を上下。二の腕の裏に強く効く。',
+ how:['椅子に背を向けて、ふちに手をつく（指は前向き）','お尻を椅子から前に出し、足を伸ばしてかかとを床に','ひじを後ろに曲げて、お尻を床に近づける（ひじ90度まで）','手で押して戻る'],
+ miss:['ひじが外に開く','肩が前に出る・すくむ（肩が痛いなら中止）','お尻が椅子から遠すぎる'],easy:'ひざを曲げて足を近づける',hard:'足を別の椅子に乗せる'},
+{id:'push6b',pat:'push',lv:6,name:'リュック・プッシュアップ',kind:'reps',range:[6,12],need:'bag',fig:'bagpush',
+ desc:'本を入れたリュックを背負って腕立て。重さで負荷を伸ばせる。',
+ how:['リュックに本やペットボトルを入れて背負う（最初は2〜3kg）','ふつうのプッシュアップと同じ形','リュックがずれないよう、ストラップを短くする'],
+ miss:['重さで腰が落ちる','可動域が小さくなる'],easy:'中身を減らす',hard:'中身を増やす'},
+{id:'vpush1b',pat:'vpush',lv:1,name:'ダンベル・サイドレイズ',kind:'reps',range:[10,15],need:'db',fig:'dbraise',
+ desc:'ダンベルを横に持ち上げる。肩の横（三角筋）に効く。',
+ how:['ダンベルを体の横で持ち、ひじを軽く曲げる','肩の高さまで横に持ち上げる（小指がやや上）','2秒かけて下ろす'],
+ miss:['反動で上げる','肩がすくむ','肩より高く上げる'],easy:'軽くする',hard:'上で1秒止める'},
+{id:'vpush2b',pat:'vpush',lv:2,name:'ダンベル・ショルダープレス',kind:'reps',range:[8,12],need:'db',fig:'dbohp',
+ desc:'ダンベルを頭の上に押し上げる。肩の王道。',
+ how:['ダンベルを肩の高さで持つ（手のひらは前）','頭の真上に押し上げる','ゆっくり肩の高さまで下ろす'],
+ miss:['腰を反って上げる（おなかを固める）','ひじが前後にぶれる'],easy:'座って行う',hard:'重くする'},
+{id:'pull2b',pat:'pull',lv:2,name:'バンド・プルアパート',kind:'reps',range:[12,20],need:'band',fig:'bandpull',
+ desc:'チューブを両手で横に広げる。猫背対策の定番。',
+ how:['チューブの両端を肩幅で持ち、腕を前に伸ばす','肩甲骨を寄せながら、チューブを胸の高さで左右に広げる','ゆっくり戻す'],
+ miss:['肩がすくむ','ひじを曲げすぎる'],easy:'持つ幅を広くする',hard:'持つ幅を狭くする'},
+{id:'pull3b',pat:'pull',lv:3,name:'バンド・ロウ',kind:'reps',range:[10,15],need:'band',fig:'bandrow',
+ desc:'ドアに掛けたチューブを引く。背中の真ん中に効く。',
+ how:['チューブをドアノブに掛けて両端を持ち、腕を伸ばしてチューブを張る','ひじを体に沿わせて後ろに引く。肩甲骨を寄せる','2秒かけて戻す'],
+ miss:['体を後ろに倒して引く','肩がすくむ'],easy:'ドアに近づく',hard:'ドアから離れる・チューブを二重に'},
+{id:'pull7b',pat:'pull',lv:7,name:'チンアップ（逆手懸垂）',kind:'reps',range:[3,10],need:'bar',fig:'pullup',
+ desc:'手のひらを自分に向けた懸垂。力こぶも使えるので懸垂より少しやさしい。',
+ how:['肩幅で手のひらを自分に向けてバーを持つ','ひじを腰に近づけるように引き上げ、あごをバーの上へ','ゆっくり下りる'],
+ miss:['反動を使う','下りきらない'],easy:'ネガティブに戻る',hard:'ゆっくり下りる（5秒）'},
+{id:'squat3b',pat:'squat',lv:3,name:'バンド・スクワット',kind:'reps',range:[10,15],need:'band',fig:'bandsquat',
+ desc:'チューブを足で踏んで肩に掛けてスクワット。立つときに負荷がかかる。',
+ how:['チューブの真ん中を両足で踏み、両端を肩の前で持つ','ふつうのスクワットと同じ形でしゃがむ','立ち上がるときにチューブの抵抗を感じる'],
+ miss:['チューブに引かれて背中が丸まる','ひざが内側に入る'],easy:'持つ位置を長くする',hard:'持つ位置を短くする'},
+{id:'squat4b',pat:'squat',lv:4,name:'ゴブレットスクワット',kind:'reps',range:[8,15],need:'db',fig:'dbsquat',
+ desc:'ダンベルを胸の前で抱えてスクワット。重りがあると逆にフォームが安定する。',
+ how:['ダンベルを両手で胸の前に抱える（ひじは下）','太ももが床と平行になるまでしゃがむ。ひじがひざの内側に来る','かかとで押して立つ'],
+ miss:['ダンベルが胸から離れる','背中が丸まる'],easy:'軽くする',hard:'重くする・下で2秒止める'},
+{id:'squat5b',pat:'squat',lv:5,name:'リュック・スクワット',kind:'reps',range:[8,15],need:'bag',fig:'bagsquat',
+ desc:'重りを入れたリュックを背負ってスクワット。バーベルの代わり。',
+ how:['本やペットボトルを入れたリュックを背負う','ふつうのスクワットの形で深くしゃがむ','かかとで押して立つ'],
+ miss:['重さで背中が丸まる','かかとが浮く'],easy:'中身を減らす',hard:'中身を増やす・前に抱える'},
+{id:'lunge3b',pat:'lunge',lv:3,name:'ダンベル・ランジ',kind:'reps',range:[8,12],need:'db',sides:true,fig:'dblunge',
+ desc:'ダンベルを両手に持って後ろにランジ。',
+ how:['ダンベルを体の横で持つ','片足を後ろに引いて、後ろのひざを床に近づける','前のかかとで押して戻る'],
+ miss:['上体が前に倒れる','ひざが内側に入る'],easy:'片手だけ持つ',hard:'重くする'},
+{id:'lunge5b',pat:'lunge',lv:5,name:'リュック・ブルガリアンスクワット',kind:'reps',range:[6,12],need:['chair','bag'],sides:true,fig:'bulgarian',
+ desc:'リュックを背負ったブルガリアンスクワット。自重最強の脚種目に重さを足す。',
+ how:['リュックを背負い、後ろ足の甲を椅子に乗せる','上体をまっすぐ保って、前のひざを直角まで曲げる','前のかかとで押して立つ'],
+ miss:['前足が近すぎる','上体が前に倒れすぎる'],easy:'中身を減らす',hard:'中身を増やす'},
+{id:'hinge3b',pat:'hinge',lv:3,name:'バンド・グッドモーニング',kind:'reps',range:[10,15],need:'band',fig:'bandsquat',
+ desc:'チューブを足で踏んで首の後ろに掛け、お尻を後ろに引く。',
+ how:['チューブを両足で踏み、両端を首の後ろ（肩の上）に掛ける','背中をまっすぐのまま、お尻を後ろに引いて上体を倒す','お尻を締めて立つ'],
+ miss:['背中が丸まる','ひざを曲げすぎる'],easy:'持つ位置を長くする',hard:'持つ位置を短くする'},
+{id:'hinge4c',pat:'hinge',lv:4,name:'リュック・ルーマニアンデッドリフト',kind:'reps',range:[8,12],need:'bag',fig:'baghinge',
+ desc:'リュックを前に抱えてヒップヒンジ。もも裏とお尻に重さをかける。',
+ how:['リュックを両手で太ももの前に持つ','背中をまっすぐのまま、お尻を後ろに引いて上体を倒す','もも裏が伸びたら、お尻を締めて立つ'],
+ miss:['背中が丸まる','ひざを曲げすぎる'],easy:'中身を減らす',hard:'中身を増やす'},
+{id:'core5b',pat:'core',lv:5,name:'バンド・パロフプレス',kind:'reps',range:[10,15],need:'band',sides:true,fig:'bandpress',
+ desc:'横から引かれるチューブに耐えながら腕を前に伸ばす。ひねりに耐える体幹。',
+ how:['ドアノブに掛けたチューブを、ドアに横向きに立って胸の前で持つ','腕を前にまっすぐ伸ばす。体がドア側に回らないように耐える','2秒止めて戻す'],
+ miss:['体がひねられる','肩がすくむ'],easy:'ドアに近づく',hard:'ドアから離れる'},
+{id:'core7b',pat:'core',lv:7,name:'ダンベル・ロシアンツイスト',kind:'reps',range:[10,20],need:'db',fig:'rustwist',
+ desc:'座って上体を後ろに倒し、ダンベルを左右に振る。わき腹。',
+ how:['座ってひざを曲げ、上体を少し後ろに倒す','ダンベルを両手で持ち、胸の前で左右に振る。左右で1回','背中は丸めず、胸を張る'],
+ miss:['腕だけ振る（胸ごと回す）','背中が丸まる'],easy:'ダンベルなし・足を床につける',hard:'足を浮かせる'},
 ];
 const EX_BY_ID = Object.fromEntries(EX.map(e=>[e.id,e]));
 
@@ -676,63 +760,79 @@ const TIME_PLAN = {
 };
 
 /* ---------- 棒人間のポーズ ----------
-   座標は 160×100 のキャンバス。地面は y=92。右向き。
+   座標は 160×100 のキャンバス。地面は y=92。基本は右向き。
    h=頭 n=首(肩) hp=腰 k/a=脚(ひざ/足首) k2/a2=もう一方の脚 e/w=腕(ひじ/手首) e2/w2=もう一方の腕
-   b に無いキーは a と同じ */
+   b に無いキーは a と同じ。
+   face=顔の向き(度: 0=右 90=下 -90=上 180=左) toes=つま先の向き toes2=もう一方の足のつま先
+   pos=見た目の説明（うつぶせ／あおむけ など）。props=小道具（rect/line/bar/towel/db/pack/link/anchor） */
 const ST = {h:[70,16],n:[70,25],hp:[70,54],k:[70,73],a:[70,92],e:[68,40],w:[70,56]};
 const FIGS = {
-  stand:{a:ST,b:{h:[70,15]}},
-  march:{a:{...ST,k2:[70,73],a2:[70,92],e2:[68,40],w2:[70,56]},b:{k2:[82,62],a2:[78,78],e:[76,36],w:[82,48],e2:[62,38],w2:[58,52]}},
-  armcircle:{a:{...ST,e:[84,27],w:[98,26],e2:[56,27],w2:[42,26]},b:{e:[82,16],w:[92,6],e2:[58,16],w2:[48,6]}},
-  hipcircle:{a:{...ST,e:[78,42],w:[74,54],e2:[62,42],w2:[66,54]},b:{hp:[78,54],k:[74,73],e:[84,42],w:[80,54],e2:[70,42],w2:[74,54]}},
-  legswing:{a:{...ST,k2:[84,66],a2:[94,74],e:[84,32],w:[100,28]},b:{k2:[58,66],a2:[46,74]}},
-  lungetwist:{a:{h:[92,30],n:[86,36],hp:[70,62],k:[88,74],a:[88,92],k2:[56,84],a2:[40,92],e:[86,66],w:[82,92],e2:[96,30],w2:[100,10]},b:{e2:[96,44],w2:[104,58]}},
-  catcow:{a:{h:[112,58],n:[104,64],hp:[64,66],k:[64,92],a:[42,92],e:[106,78],w:[106,92]},b:{h:[110,70],n:[104,60],hp:[66,58]}},
-  halfsquat:{a:{...ST,e:[80,40],w:[92,40]},b:{hp:[64,62],k:[78,68],a:[76,92],n:[70,36],h:[73,28],e:[84,42],w:[96,40]}},
-  squat:{a:{...ST,e:[80,40],w:[92,40]},b:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[84,44],w:[98,42]}},
-  chairsquat:{props:[{t:'rect',x:34,y:66,w:26,h:26},{t:'rect',x:34,y:40,w:5,h:26}],a:{h:[72,16],n:[72,25],hp:[72,54],k:[72,73],a:[72,92],e:[80,40],w:[90,40]},b:{hp:[58,66],k:[78,68],a:[78,92],n:[66,38],h:[68,30],e:[82,44],w:[96,42]}},
-  chairsquat1:{props:[{t:'rect',x:34,y:66,w:26,h:26},{t:'rect',x:34,y:40,w:5,h:26}],a:{h:[72,16],n:[72,25],hp:[72,54],k:[72,73],a:[72,92],k2:[80,66],a2:[92,72],e:[80,40],w:[90,40]},b:{hp:[58,66],k:[78,68],a:[78,92],k2:[80,64],a2:[104,66],n:[66,38],h:[68,30],e:[82,44],w:[96,42]}},
-  pistol:{props:[{t:'rect',x:118,y:6,w:6,h:86}],a:{h:[74,16],n:[74,25],hp:[74,54],k:[74,73],a:[74,92],k2:[84,66],a2:[96,72],e:[90,32],w:[118,36]},b:{hp:[60,72],k:[80,76],a:[78,92],k2:[84,72],a2:[108,76],n:[70,44],h:[74,36],e:[96,46],w:[118,36]}},
-  jumpsquat:{a:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[84,44],w:[98,42]},b:{h:[74,8],n:[74,17],hp:[74,46],k:[74,64],a:[74,82],e:[82,10],w:[88,1]}},
-  lunge:{a:{...ST,k2:[70,73],a2:[70,92],e2:[68,40],w2:[70,56]},b:{hp:[70,62],k:[88,74],a:[88,92],k2:[56,84],a2:[40,92],n:[70,32],h:[70,23],e:[78,44],w:[74,56],e2:[62,44],w2:[66,56]}},
-  splitsquat:{props:[{t:'rect',x:112,y:6,w:6,h:86}],a:{h:[70,16],n:[70,25],hp:[70,54],k:[82,72],a:[86,92],k2:[58,74],a2:[48,92],e:[88,34],w:[112,36],e2:[62,40],w2:[66,54]},b:{hp:[70,64],k:[86,76],a:[86,92],k2:[56,84],a2:[48,92],n:[70,36],h:[70,27],e:[90,42],w:[112,36],e2:[62,50],w2:[66,62]}},
-  stepup:{props:[{t:'rect',x:84,y:76,w:30,h:16}],a:{h:[64,16],n:[64,25],hp:[64,54],k:[64,73],a:[64,92],k2:[80,60],a2:[92,76],e:[72,40],w:[80,46]},b:{h:[82,8],n:[82,17],hp:[80,46],k:[92,60],a:[94,76],k2:[72,66],a2:[64,82],e:[90,30],w:[98,36]}},
-  bulgarian:{props:[{t:'rect',x:14,y:66,w:24,h:26}],a:{h:[70,16],n:[70,25],hp:[70,54],k:[70,73],a:[70,92],k2:[52,72],a2:[36,66],e:[78,42],w:[74,56]},b:{hp:[66,64],k:[84,74],a:[84,92],k2:[48,84],a2:[36,66],n:[68,36],h:[68,27],e:[78,48],w:[74,60]}},
-  bridge:{a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,70],a:[90,92],e:[52,90],w:[62,92]},b:{hp:[70,68],k:[86,66]}},
-  bridge1:{a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,70],a:[90,92],k2:[84,70],a2:[90,92],e:[52,90],w:[62,92]},b:{hp:[70,68],k:[86,66],k2:[92,56],a2:[108,50]}},
-  hinge:{a:ST,b:{hp:[64,58],n:[96,44],h:[104,42],k:[66,74],a:[68,92],e:[94,56],w:[92,70]}},
-  rdl:{a:{...ST,k2:[70,73],a2:[70,92]},b:{hp:[62,58],n:[96,46],h:[104,44],k:[64,74],a:[66,92],k2:[42,58],a2:[22,60],e:[92,58],w:[90,72]}},
-  deadbug:{a:{h:[30,86],n:[40,84],hp:[70,86],k:[72,66],a:[88,66],k2:[72,66],a2:[88,66],e:[40,66],w:[40,50],e2:[40,66],w2:[40,50]},b:{e:[30,74],w:[16,80],k2:[86,74],a2:[104,80]}},
-  kneeplank:{a:{h:[112,60],n:[104,64],hp:[70,74],k:[52,92],a:[30,92],e:[104,90],w:[120,90]},b:{hp:[70,73]}},
-  plank:{a:{h:[114,56],n:[106,60],hp:[72,70],k:[48,82],a:[22,92],e:[106,90],w:[122,90]},b:{hp:[72,69]}},
-  sideplank:{a:{h:[110,54],n:[102,58],hp:[70,72],k:[46,84],a:[22,92],e:[100,90],w:[116,90],e2:[100,48],w2:[96,32]},b:{hp:[70,70]}},
-  mtclimber:{a:{h:[112,46],n:[104,50],hp:[72,66],k:[48,80],a:[22,92],k2:[82,70],a2:[76,88],e:[108,70],w:[106,92]},b:{k:[82,70],a:[76,88],k2:[48,80],a2:[22,92]}},
-  hollow:{a:{h:[34,72],n:[44,76],hp:[70,88],k:[92,80],a:[112,74],e:[30,64],w:[18,56]},b:{h:[34,70],a:[112,72]}},
-  legraise:{a:{h:[30,86],n:[40,84],hp:[70,88],k:[88,88],a:[106,88],e:[52,90],w:[62,92]},b:{k:[78,70],a:[82,52]}},
-  hangknee:{ground:false,props:[{t:'bar',x1:60,x2:120,y:8}],a:{w:[90,8],e:[90,26],n:[90,44],h:[90,36],hp:[90,70],k:[88,86],a:[92,98]},b:{k:[100,60],a:[94,76]}},
-  wallpush:{props:[{t:'rect',x:112,y:6,w:6,h:86}],a:{h:[94,19],n:[92,28],hp:[82,56],k:[77,74],a:[74,92],e:[102,32],w:[112,36]},b:{h:[104,20],n:[100,28],hp:[86,56],k:[79,74],e:[100,42]}},
-  inclinepush:{props:[{t:'rect',x:100,y:62,w:30,h:30}],a:{h:[104,40],n:[96,46],hp:[70,68],k:[50,80],a:[28,92],e:[104,54],w:[108,62]},b:{h:[110,52],n:[102,56],hp:[74,74],k:[52,84],e:[116,62]}},
-  kneepush:{a:{h:[108,50],n:[100,54],hp:[64,70],k:[46,92],a:[24,92],e:[106,72],w:[104,92]},b:{h:[112,68],n:[102,70],hp:[68,80],e:[118,82]}},
-  pushup:{a:{h:[112,46],n:[104,50],hp:[72,66],k:[48,80],a:[22,92],e:[108,70],w:[106,92]},b:{h:[114,68],n:[104,70],hp:[74,78],k:[48,86],e:[120,82]}},
-  declinepush:{props:[{t:'rect',x:8,y:66,w:26,h:26}],a:{h:[110,46],n:[102,50],hp:[66,56],k:[42,60],a:[20,66],e:[108,70],w:[106,92]},b:{h:[112,66],n:[102,68],hp:[68,70],k:[44,62],e:[120,82]}},
-  kneepike:{a:{h:[98,78],n:[94,66],hp:[66,58],k:[50,92],a:[28,92],e:[100,80],w:[104,92]},b:{h:[102,86],n:[98,76],hp:[68,62],e:[110,84]}},
-  pike:{a:{h:[102,82],n:[98,70],hp:[76,48],k:[58,72],a:[42,92],e:[106,80],w:[110,92]},b:{h:[108,88],n:[104,78],hp:[80,54],e:[114,86]}},
-  elevpike:{props:[{t:'rect',x:18,y:64,w:26,h:28}],a:{h:[100,80],n:[96,68],hp:[72,44],k:[52,54],a:[30,64],e:[104,80],w:[108,92]},b:{h:[106,88],n:[102,78],hp:[76,50],e:[112,86]}},
-  wallhs:{props:[{t:'rect',x:118,y:4,w:6,h:88}],a:{w:[100,92],e:[100,74],n:[100,56],h:[106,58],hp:[104,32],k:[108,18],a:[116,8]},b:{n:[100,55]}},
-  yraise:{a:{h:[112,84],n:[104,86],hp:[72,88],k:[46,90],a:[22,90],e:[120,86],w:[134,86]},b:{h:[112,78],n:[104,82],e:[122,78],w:[136,70]}},
-  superman:{a:{h:[112,84],n:[104,86],hp:[72,88],k:[46,90],a:[22,90],e:[120,86],w:[134,86]},b:{h:[112,76],n:[104,80],e:[120,74],w:[134,68],k:[46,84],a:[22,80]}},
-  towelrow:{props:[{t:'rect',x:118,y:6,w:6,h:86},{t:'rect',x:112,y:40,w:6,h:3},{t:'towel',x:116,y:41}],a:{h:[80,22],n:[84,32],hp:[92,58],k:[96,76],a:[100,92],e:[96,36],w:[108,40]},b:{h:[92,22],n:[94,32],hp:[96,58],k:[98,76],e:[104,44],w:[112,42]}},
-  tablerow:{props:[{t:'rect',x:44,y:40,w:90,h:5},{t:'line',x1:47,y1:45,x2:47,y2:92},{t:'line',x1:131,y1:45,x2:131,y2:92}],a:{h:[108,80],n:[100,80],hp:[72,82],k:[48,74],a:[36,92],e:[104,64],w:[108,45]},b:{h:[108,56],n:[100,58],hp:[74,72],e:[96,50]}},
-  tablerowst:{props:[{t:'rect',x:44,y:40,w:90,h:5},{t:'line',x1:47,y1:45,x2:47,y2:92},{t:'line',x1:131,y1:45,x2:131,y2:92}],a:{h:[108,80],n:[100,80],hp:[72,84],k:[46,88],a:[20,92],e:[104,64],w:[108,45]},b:{h:[108,56],n:[100,58],hp:[74,72],k:[46,84],e:[96,50]}},
-  invrow:{props:[{t:'bar',x1:80,x2:136,y:44},{t:'line',x1:84,y1:44,x2:84,y2:92},{t:'line',x1:132,y1:44,x2:132,y2:92}],a:{h:[108,72],n:[100,74],hp:[72,80],k:[46,86],a:[20,92],e:[106,60],w:[108,44]},b:{h:[108,50],n:[100,52],hp:[74,68],e:[94,48]}},
-  pullup:{ground:false,props:[{t:'bar',x1:60,x2:120,y:8}],a:{w:[90,8],e:[90,26],n:[90,44],h:[90,36],hp:[90,70],k:[86,86],a:[94,98]},b:{e:[102,16],n:[90,20],h:[90,12],hp:[90,48],k:[86,64],a:[94,74]}},
-  dbrow:{props:[{t:'rect',x:40,y:60,w:56,h:5},{t:'line',x1:44,y1:65,x2:44,y2:92},{t:'line',x1:92,y1:65,x2:92,y2:92}],a:{h:[54,42],n:[62,46],hp:[94,56],k:[98,74],a:[100,92],e:[60,60],w:[58,74],e2:[70,54],w2:[76,60]},b:{e:[68,50],w:[60,58]}},
-  cheststretch:{props:[{t:'rect',x:110,y:6,w:6,h:86}],a:{h:[84,16],n:[84,25],hp:[84,54],k:[84,73],a:[84,92],e:[98,26],w:[110,24],e2:[80,40],w2:[82,55]},b:{n:[86,25],h:[86,16]}},
-  quadstretch:{props:[{t:'rect',x:112,y:6,w:6,h:86}],a:{...ST,k2:[68,74],a2:[60,64],e:[90,32],w:[112,34],e2:[62,46],w2:[60,64]},b:{k2:[66,74],a2:[58,62],w2:[58,62]}},
-  hamstretch:{a:{h:[100,44],n:[92,46],hp:[60,58],k:[62,74],a:[62,92],k2:[78,72],a2:[88,90],e:[90,58],w:[88,72]},b:{h:[101,45]}},
-  glutestretch:{a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,72],a:[90,92],k2:[90,60],a2:[80,74],e:[52,80],w:[74,70]},b:{k:[82,70],a:[88,90]}},
-  childpose:{a:{h:[92,86],n:[84,84],hp:[52,78],k:[50,92],a:[28,92],e:[100,90],w:[112,92]},b:{n:[84,85]}},
-  neckroll:{a:{...ST},b:{h:[76,18]}},
+  stand:{pos:'立ち',a:ST,b:{h:[70,15]}},
+  march:{pos:'立ち',a:{...ST,k2:[70,73],a2:[70,92],e2:[68,40],w2:[70,56]},b:{k2:[82,62],a2:[78,78],e:[76,36],w:[82,48],e2:[62,38],w2:[58,52]},toes2:[0,10]},
+  armcircle:{pos:'立ち',a:{...ST,e:[84,27],w:[98,26],e2:[56,27],w2:[42,26]},b:{e:[82,16],w:[92,6],e2:[58,16],w2:[48,6]}},
+  hipcircle:{pos:'立ち',a:{...ST,e:[78,42],w:[74,54],e2:[62,42],w2:[66,54]},b:{hp:[78,54],k:[74,73],e:[84,42],w:[80,54],e2:[70,42],w2:[74,54]}},
+  legswing:{pos:'立ち',a:{...ST,k2:[84,66],a2:[94,74],e:[84,32],w:[100,28]},b:{k2:[58,66],a2:[46,74]}},
+  lungetwist:{pos:'ランジ姿勢',a:{h:[92,30],n:[86,36],hp:[70,62],k:[88,74],a:[88,92],k2:[56,84],a2:[40,92],e:[86,66],w:[82,92],e2:[96,30],w2:[100,10]},b:{e2:[96,44],w2:[104,58]}},
+  catcow:{pos:'四つんばい',face:60,toes:180,a:{h:[112,58],n:[104,64],hp:[64,66],k:[64,92],a:[42,92],e:[106,78],w:[106,92]},b:{h:[110,70],n:[104,60],hp:[66,58]}},
+  halfsquat:{pos:'立ち',a:{...ST,e:[80,40],w:[92,40]},b:{hp:[64,62],k:[78,68],a:[76,92],n:[70,36],h:[73,28],e:[84,42],w:[96,40]}},
+  squat:{pos:'立ち',a:{...ST,e:[80,40],w:[92,40]},b:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[84,44],w:[98,42]}},
+  chairsquat:{pos:'立ち（後ろに椅子）',props:[{t:'rect',x:34,y:66,w:26,h:26},{t:'rect',x:34,y:40,w:5,h:26}],a:{h:[72,16],n:[72,25],hp:[72,54],k:[72,73],a:[72,92],e:[80,40],w:[90,40]},b:{hp:[58,66],k:[78,68],a:[78,92],n:[66,38],h:[68,30],e:[82,44],w:[96,42]}},
+  chairsquat1:{pos:'立ち（後ろに椅子）',props:[{t:'rect',x:34,y:66,w:26,h:26},{t:'rect',x:34,y:40,w:5,h:26}],a:{h:[72,16],n:[72,25],hp:[72,54],k:[72,73],a:[72,92],k2:[80,66],a2:[92,72],e:[80,40],w:[90,40]},b:{hp:[58,66],k:[78,68],a:[78,92],k2:[80,64],a2:[104,66],n:[66,38],h:[68,30],e:[82,44],w:[96,42]}},
+  pistol:{pos:'立ち（横にドア枠）',props:[{t:'rect',x:118,y:6,w:6,h:86}],a:{h:[74,16],n:[74,25],hp:[74,54],k:[74,73],a:[74,92],k2:[84,66],a2:[96,72],e:[90,32],w:[118,36]},b:{hp:[60,72],k:[80,76],a:[78,92],k2:[84,72],a2:[108,76],n:[70,44],h:[74,36],e:[96,46],w:[118,36]}},
+  jumpsquat:{pos:'立ち',toes:[0,60],a:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[84,44],w:[98,42]},b:{h:[74,8],n:[74,17],hp:[74,46],k:[74,64],a:[74,82],e:[82,10],w:[88,1]}},
+  lunge:{pos:'立ち',a:{...ST,k2:[70,73],a2:[70,92],e2:[68,40],w2:[70,56]},b:{hp:[70,62],k:[88,74],a:[88,92],k2:[56,84],a2:[40,92],n:[70,32],h:[70,23],e:[78,44],w:[74,56],e2:[62,44],w2:[66,56]}},
+  splitsquat:{pos:'立ち（横に壁）',props:[{t:'rect',x:112,y:6,w:6,h:86}],a:{h:[70,16],n:[70,25],hp:[70,54],k:[82,72],a:[86,92],k2:[58,74],a2:[48,92],e:[88,34],w:[112,36],e2:[62,40],w2:[66,54]},b:{hp:[70,64],k:[86,76],a:[86,92],k2:[56,84],a2:[48,92],n:[70,36],h:[70,27],e:[90,42],w:[112,36],e2:[62,50],w2:[66,62]}},
+  stepup:{pos:'立ち（前に段）',props:[{t:'rect',x:84,y:76,w:30,h:16}],a:{h:[64,16],n:[64,25],hp:[64,54],k:[64,73],a:[64,92],k2:[80,60],a2:[92,76],e:[72,40],w:[80,46]},b:{h:[82,8],n:[82,17],hp:[80,46],k:[92,60],a:[94,76],k2:[72,66],a2:[64,82],e:[90,30],w:[98,36]}},
+  bulgarian:{pos:'立ち（後ろに椅子）',toes2:150,props:[{t:'rect',x:14,y:66,w:24,h:26}],a:{h:[70,16],n:[70,25],hp:[70,54],k:[70,73],a:[70,92],k2:[52,72],a2:[36,66],e:[78,42],w:[74,56]},b:{hp:[66,64],k:[84,74],a:[84,92],k2:[48,84],a2:[36,66],n:[68,36],h:[68,27],e:[78,48],w:[74,60]}},
+  bridge:{pos:'あおむけ',face:-90,a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,70],a:[90,92],e:[52,90],w:[62,92]},b:{hp:[70,68],k:[86,66]}},
+  bridge1:{pos:'あおむけ',face:-90,toes2:[0,-40],a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,70],a:[90,92],k2:[84,70],a2:[90,92],e:[52,90],w:[62,92]},b:{hp:[70,68],k:[86,66],k2:[92,56],a2:[108,50]}},
+  hinge:{pos:'立ち',face:[0,60],a:ST,b:{hp:[64,58],n:[96,44],h:[104,42],k:[66,74],a:[68,92],e:[94,56],w:[92,70]}},
+  rdl:{pos:'立ち',face:[0,60],toes2:[0,150],a:{...ST,k2:[70,73],a2:[70,92]},b:{hp:[62,58],n:[96,46],h:[104,44],k:[64,74],a:[66,92],k2:[42,58],a2:[22,60],e:[92,58],w:[90,72]}},
+  deadbug:{pos:'あおむけ',face:-90,toes:-90,toes2:[-90,-60],a:{h:[30,86],n:[40,84],hp:[70,86],k:[72,66],a:[88,66],k2:[72,66],a2:[88,66],e:[40,66],w:[40,50],e2:[40,66],w2:[40,50]},b:{e:[30,74],w:[16,80],k2:[86,74],a2:[104,80]}},
+  kneeplank:{pos:'うつぶせ',face:70,toes:180,a:{h:[112,60],n:[104,64],hp:[70,74],k:[52,92],a:[30,90],e:[104,90],w:[120,90]},b:{hp:[70,73]}},
+  plank:{pos:'うつぶせ',face:70,toes:65,a:{h:[114,56],n:[106,60],hp:[72,70],k:[48,82],a:[22,86],e:[106,90],w:[122,90]},b:{hp:[72,69]}},
+  sideplank:{pos:'横向き',face:0,toes:20,a:{h:[110,54],n:[102,58],hp:[70,72],k:[46,84],a:[22,88],e:[100,90],w:[116,90],e2:[100,48],w2:[96,32]},b:{hp:[70,70]}},
+  mtclimber:{pos:'うつぶせ',face:70,toes:65,toes2:65,a:{h:[112,46],n:[104,50],hp:[72,66],k:[48,80],a:[22,86],k2:[82,70],a2:[76,86],e:[108,70],w:[106,92]},b:{k:[82,70],a:[76,86],k2:[48,80],a2:[22,86]}},
+  hollow:{pos:'あおむけ',face:-60,toes:-20,a:{h:[34,72],n:[44,76],hp:[70,88],k:[92,80],a:[112,74],e:[30,64],w:[18,56]},b:{h:[34,70],a:[112,72]}},
+  legraise:{pos:'あおむけ',face:-90,toes:-90,a:{h:[30,86],n:[40,84],hp:[70,88],k:[88,88],a:[106,88],e:[52,90],w:[62,92]},b:{k:[78,70],a:[82,52]}},
+  hangknee:{pos:'ぶら下がり',toes:90,ground:false,props:[{t:'bar',x1:60,x2:120,y:8}],a:{w:[90,8],e:[90,26],n:[90,44],h:[90,36],hp:[90,70],k:[88,86],a:[92,96]},b:{k:[100,60],a:[94,76]}},
+  wallpush:{pos:'立ち（前に壁）',props:[{t:'rect',x:112,y:6,w:6,h:86}],a:{h:[94,19],n:[92,28],hp:[82,56],k:[77,74],a:[74,92],e:[102,32],w:[112,36]},b:{h:[104,20],n:[100,28],hp:[86,56],k:[79,74],e:[100,42]}},
+  inclinepush:{pos:'うつぶせ（手を台に）',face:70,toes:65,props:[{t:'rect',x:100,y:62,w:30,h:30}],a:{h:[104,40],n:[96,46],hp:[70,68],k:[50,80],a:[28,86],e:[104,54],w:[108,62]},b:{h:[110,52],n:[102,56],hp:[74,74],k:[52,84],e:[116,62]}},
+  kneepush:{pos:'うつぶせ（ひざつき）',face:70,toes:180,a:{h:[108,50],n:[100,54],hp:[64,70],k:[46,92],a:[24,90],e:[106,72],w:[104,92]},b:{h:[112,68],n:[102,70],hp:[68,80],e:[118,82]}},
+  pushup:{pos:'うつぶせ',face:70,toes:65,a:{h:[112,46],n:[104,50],hp:[72,66],k:[48,80],a:[22,86],e:[108,70],w:[106,92]},b:{h:[114,68],n:[104,70],hp:[74,78],k:[48,86],e:[120,82]}},
+  bagpush:{pos:'うつぶせ（リュック）',face:70,toes:65,props:[{t:'pack'}],a:{h:[112,46],n:[104,50],hp:[72,66],k:[48,80],a:[22,86],e:[108,70],w:[106,92]},b:{h:[114,68],n:[104,70],hp:[74,78],k:[48,86],e:[120,82]}},
+  declinepush:{pos:'うつぶせ（足を椅子に）',face:70,toes:65,props:[{t:'rect',x:8,y:66,w:26,h:26}],a:{h:[110,46],n:[102,50],hp:[66,56],k:[42,60],a:[20,62],e:[108,70],w:[106,92]},b:{h:[112,66],n:[102,68],hp:[68,70],k:[44,62],e:[120,82]}},
+  kneepike:{pos:'四つんばい（お尻を上げる）',face:90,toes:180,a:{h:[98,78],n:[94,66],hp:[66,58],k:[50,92],a:[28,90],e:[100,80],w:[104,92]},b:{h:[102,86],n:[98,76],hp:[68,62],e:[110,84]}},
+  pike:{pos:'うつぶせ（逆V）',face:90,toes:0,a:{h:[102,82],n:[98,70],hp:[76,48],k:[58,72],a:[42,92],e:[106,80],w:[110,92]},b:{h:[108,88],n:[104,78],hp:[80,54],e:[114,86]}},
+  elevpike:{pos:'うつぶせ（足を椅子に）',face:90,toes:60,props:[{t:'rect',x:18,y:64,w:26,h:28}],a:{h:[100,80],n:[96,68],hp:[72,44],k:[52,54],a:[30,60],e:[104,80],w:[108,92]},b:{h:[106,88],n:[102,78],hp:[76,50],e:[112,86]}},
+  wallhs:{pos:'倒立（足を壁に）',face:135,toes:-90,props:[{t:'rect',x:118,y:4,w:6,h:88}],a:{w:[100,92],e:[100,74],n:[100,56],h:[106,58],hp:[104,32],k:[108,18],a:[116,8]},b:{n:[100,55]}},
+  yraise:{pos:'うつぶせ',face:[80,60],toes:180,a:{h:[112,84],n:[104,86],hp:[72,88],k:[46,90],a:[22,90],e:[120,86],w:[134,86]},b:{h:[112,78],n:[104,82],e:[122,78],w:[136,70]}},
+  superman:{pos:'うつぶせ',face:[80,60],toes:180,a:{h:[112,84],n:[104,86],hp:[72,88],k:[46,90],a:[22,90],e:[120,86],w:[134,86]},b:{h:[112,76],n:[104,80],e:[120,74],w:[134,68],k:[46,84],a:[22,80]}},
+  towelrow:{pos:'立ち（前にドア）',props:[{t:'rect',x:118,y:6,w:6,h:86},{t:'rect',x:112,y:40,w:6,h:3},{t:'anchor',from:'w',x:116,y:41}],a:{h:[80,22],n:[84,32],hp:[92,58],k:[96,76],a:[100,92],e:[96,36],w:[108,40]},b:{h:[92,22],n:[94,32],hp:[96,58],k:[98,76],e:[104,44],w:[112,42]}},
+  bandrow:{pos:'立ち（前にドア）',props:[{t:'rect',x:118,y:6,w:6,h:86},{t:'rect',x:112,y:40,w:6,h:3},{t:'anchor',from:'w',x:114,y:41}],a:{h:[64,16],n:[64,25],hp:[64,54],k:[64,73],a:[64,92],e:[76,34],w:[92,38]},b:{e:[58,44],w:[70,42]}},
+  bandpress:{pos:'立ち（後ろにドア）',props:[{t:'rect',x:6,y:6,w:6,h:86},{t:'anchor',from:'w',x:12,y:34}],a:{h:[70,16],n:[70,25],hp:[70,54],k:[74,73],a:[78,92],k2:[62,74],a2:[56,92],e:[78,36],w:[84,36]},b:{e:[86,30],w:[102,30]}},
+  bandpull:{pos:'立ち',props:[{t:'link',from:'w',to:'w2'}],a:{...ST,e:[84,30],w:[100,30],e2:[84,30],w2:[100,30]},b:{e:[84,26],w:[98,20],e2:[62,34],w2:[48,36]}},
+  bandsquat:{pos:'立ち（チューブを踏む）',props:[{t:'link',from:'a',to:'w'}],a:{...ST,e:[78,38],w:[74,30]},b:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[80,50],w:[74,44]}},
+  dbsquat:{pos:'立ち（ダンベルを胸に）',props:[{t:'db',at:'w'}],a:{...ST,e:[80,40],w:[76,34]},b:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[82,52],w:[76,46]}},
+  bagsquat:{pos:'立ち（リュック）',props:[{t:'pack'}],a:{...ST,e:[80,40],w:[92,40]},b:{hp:[60,68],k:[80,72],a:[78,92],n:[68,40],h:[72,32],e:[84,44],w:[98,42]}},
+  dblunge:{pos:'立ち（ダンベル）',props:[{t:'db',at:'w'},{t:'db',at:'w2'}],a:{...ST,k2:[70,73],a2:[70,92],e:[72,42],w:[72,58],e2:[68,42],w2:[68,58]},b:{hp:[70,62],k:[88,74],a:[88,92],k2:[56,84],a2:[40,92],n:[70,32],h:[70,23],e:[76,48],w:[74,64],e2:[64,48],w2:[66,64]}},
+  baghinge:{pos:'立ち（リュックを手に）',face:[0,60],props:[{t:'db',at:'w',s:2}],a:{...ST,e:[74,42],w:[74,58]},b:{hp:[64,58],n:[96,44],h:[104,42],k:[66,74],a:[68,92],e:[94,56],w:[92,72]}},
+  dbpress:{pos:'あおむけ（ダンベル）',face:-90,props:[{t:'db',at:'w'}],a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,70],a:[90,92],e:[46,88],w:[46,74]},b:{e:[42,72],w:[42,58]}},
+  dbraise:{pos:'立ち（ダンベル）',props:[{t:'db',at:'w'},{t:'db',at:'w2'}],a:{...ST,e:[72,42],w:[74,56],e2:[68,42],w2:[66,56]},b:{e:[84,28],w:[98,26],e2:[56,28],w2:[42,26]}},
+  dbohp:{pos:'立ち（ダンベル）',props:[{t:'db',at:'w'},{t:'db',at:'w2'}],a:{...ST,e:[80,36],w:[78,24],e2:[60,36],w2:[62,24]},b:{e:[76,12],w:[76,2],e2:[64,12],w2:[64,2]}},
+  dips:{pos:'座り（椅子のふちに手）',toes:-60,props:[{t:'rect',x:20,y:66,w:26,h:26}],a:{h:[56,34],n:[54,42],hp:[62,68],k:[84,72],a:[96,92],e:[48,56],w:[44,66]},b:{h:[56,48],n:[54,56],hp:[62,78],k:[84,74],e:[38,66]}},
+  rustwist:{pos:'座り（上体を後ろに）',face:-20,toes:-60,props:[{t:'db',at:'w'}],a:{h:[50,52],n:[54,60],hp:[70,84],k:[86,70],a:[98,84],e:[66,62],w:[80,64]},b:{e:[60,66],w:[66,74]}},
+  tablerow:{pos:'あおむけ（テーブルの下）',face:-90,toes:180,props:[{t:'rect',x:44,y:40,w:90,h:5},{t:'line',x1:47,y1:45,x2:47,y2:92},{t:'line',x1:131,y1:45,x2:131,y2:92}],a:{h:[108,80],n:[100,80],hp:[72,82],k:[48,74],a:[36,92],e:[104,64],w:[108,45]},b:{h:[108,56],n:[100,58],hp:[74,72],e:[96,50]}},
+  tablerowst:{pos:'あおむけ（テーブルの下）',face:-90,toes:-90,props:[{t:'rect',x:44,y:40,w:90,h:5},{t:'line',x1:47,y1:45,x2:47,y2:92},{t:'line',x1:131,y1:45,x2:131,y2:92}],a:{h:[108,80],n:[100,80],hp:[72,84],k:[46,88],a:[20,92],e:[104,64],w:[108,45]},b:{h:[108,56],n:[100,58],hp:[74,72],k:[46,84],e:[96,50]}},
+  invrow:{pos:'あおむけ（低い鉄棒）',face:-90,toes:-90,props:[{t:'bar',x1:80,x2:136,y:44},{t:'line',x1:84,y1:44,x2:84,y2:92},{t:'line',x1:132,y1:44,x2:132,y2:92}],a:{h:[108,72],n:[100,74],hp:[72,80],k:[46,86],a:[20,92],e:[106,60],w:[108,44]},b:{h:[108,50],n:[100,52],hp:[74,68],e:[94,48]}},
+  pullup:{pos:'ぶら下がり',toes:90,ground:false,props:[{t:'bar',x1:60,x2:120,y:8}],a:{w:[90,8],e:[90,26],n:[90,44],h:[90,36],hp:[90,70],k:[86,86],a:[94,96]},b:{e:[102,16],n:[90,20],h:[90,12],hp:[90,48],k:[86,64],a:[94,74]}},
+  dbrow:{pos:'前かがみ（椅子に手）',face:130,toes:180,props:[{t:'rect',x:40,y:60,w:56,h:5},{t:'line',x1:44,y1:65,x2:44,y2:92},{t:'line',x1:92,y1:65,x2:92,y2:92},{t:'db',at:'w'}],a:{h:[54,42],n:[62,46],hp:[94,56],k:[98,74],a:[100,92],e:[60,60],w:[58,74],e2:[70,54],w2:[76,60]},b:{e:[68,50],w:[60,58]}},
+  cheststretch:{pos:'立ち（横に壁）',props:[{t:'rect',x:110,y:6,w:6,h:86}],a:{h:[84,16],n:[84,25],hp:[84,54],k:[84,73],a:[84,92],e:[98,26],w:[110,24],e2:[80,40],w2:[82,55]},b:{n:[86,25],h:[86,16]}},
+  quadstretch:{pos:'立ち（横に壁）',toes2:120,props:[{t:'rect',x:112,y:6,w:6,h:86}],a:{...ST,k2:[68,74],a2:[60,64],e:[90,32],w:[112,34],e2:[62,46],w2:[60,64]},b:{k2:[66,74],a2:[58,62],w2:[58,62]}},
+  hamstretch:{pos:'立ち（前かがみ）',face:50,toes2:-60,a:{h:[100,44],n:[92,46],hp:[60,58],k:[62,74],a:[62,92],k2:[78,72],a2:[88,90],e:[90,58],w:[88,72]},b:{h:[101,45]}},
+  glutestretch:{pos:'あおむけ',face:-90,toes2:-60,a:{h:[30,86],n:[40,84],hp:[68,88],k:[84,72],a:[90,92],k2:[90,60],a2:[80,74],e:[52,80],w:[74,70]},b:{k:[82,70],a:[88,90]}},
+  childpose:{pos:'正座から前に',face:90,toes:180,a:{h:[92,86],n:[84,84],hp:[52,78],k:[50,92],a:[28,92],e:[100,90],w:[112,92]},b:{n:[84,85]}},
+  neckroll:{pos:'立ち',a:{...ST},b:{h:[76,18]}},
 };
 
 /* ---------- 基礎知識 ---------- */
@@ -832,13 +932,13 @@ const KEY='zerokintore.v1';
 const DEFAULT_STATE=()=>({
   v:1,
   profile:{name:'',goal:'fit',days:3,time:20,onboarded:false,created:dkey()},
-  equip:{chair:true,towel:true,table:false,bar:false,db:false},
-  settings:{rest:60,coreRest:45,sound:true,vib:true,theme:'dark',prep:5,hideInstall:false},
+  equip:{chair:true,towel:true,table:false,bar:false,db:false,band:false,bag:false},
+  settings:{rest:60,coreRest:45,sound:true,vib:true,theme:'dark',prep:5,hideInstall:false,preferEquip:true},
   levels:{push:1,vpush:1,pull:1,squat:1,lunge:1,hinge:1,core:1},
   last:{},
   sessions:[],
   body:[],
-  override:{date:'',map:{}},
+  override:{date:'',map:{},list:null},
 });
 let S=load();
 function load(){ try{const raw=localStorage.getItem(KEY); if(raw) return deepMerge(DEFAULT_STATE(),JSON.parse(raw));}catch(e){console.warn(e);} return DEFAULT_STATE(); }
@@ -847,10 +947,13 @@ function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast
 const GOALS={fit:{name:'体を引きしめたい',emoji:'✨'},muscle:{name:'筋肉をつけたい',emoji:'💪'},stamina:{name:'体力をつけたい',emoji:'🏃'},posture:{name:'姿勢をよくしたい',emoji:'🧍'}};
 
 /* ---------- 種目の選択（ラダー） ---------- */
-const hasEquip=need=>!need||!!S.equip[need];
+const needs=e=>!e||!e.need?[]:Array.isArray(e.need)?e.need:[e.need];
+const hasEquip=need=>(Array.isArray(need)?need:need?[need]:[]).every(k=>!!S.equip[k]);
+const needName=e=>needs(e).map(k=>EQUIP[k].emoji+EQUIP[k].name.split('・')[0]).join('＋');
 const ladder=pat=>EX.filter(e=>e.pat===pat).sort((a,b)=>a.lv-b.lv);
 const maxLv=pat=>Math.max(...ladder(pat).map(e=>e.lv));
-const exAt=(pat,l)=>ladder(pat).find(e=>e.lv===l&&hasEquip(e.need));
+/* その段で使える種目。「道具を優先」がオンなら道具あり版を先に選ぶ */
+const exAt=(pat,l)=>{ const c=ladder(pat).filter(e=>e.lv===l&&hasEquip(e.need)); if(!c.length) return undefined; if(S.settings.preferEquip){ const g=c.find(e=>e.need); if(g) return g; } return c[0]; };
 function pickEx(pat,lv=S.levels[pat]){
   for(let l=lv;l>=1;l--){const e=exAt(pat,l); if(e) return e;}
   for(let l=lv+1;l<=maxLv(pat);l++){const e=exAt(pat,l); if(e) return e;}
@@ -858,8 +961,8 @@ function pickEx(pat,lv=S.levels[pat]){
 }
 function nextAvail(pat,lv){ for(let l=lv+1;l<=maxLv(pat);l++){const e=exAt(pat,l); if(e) return e;} return null; }
 function prevAvail(pat,lv){ for(let l=lv-1;l>=1;l--){const e=exAt(pat,l); if(e) return e;} return null; }
-function todayOverride(){ if(S.override.date!==dkey()){S.override={date:dkey(),map:{}};} return S.override.map; }
-function exForToday(pat){ const o=todayOverride(); if(pat in o){ return o[pat]?EX_BY_ID[o[pat]]:null; } return pickEx(pat); }
+function todayOverride(){ if(S.override.date!==dkey()){S.override={date:dkey(),map:{},list:null};} if(!S.override.map) S.override.map={}; return S.override; }
+function exForToday(pat){ const o=todayOverride().map; if(pat in o){ return o[pat]?EX_BY_ID[o[pat]]:null; } return pickEx(pat); }
 
 /* 今日の目標回数：前回の最小回数 +1（時間なら+5秒）。きつかったら据え置き、楽なら+2 */
 function targetFor(ex,mode){
@@ -905,11 +1008,12 @@ function buildMenu(tpl,mins,mode){
   let nEx=P.ex, sets=P.sets;
   if(mode==='light'||mode==='comeback') sets=Math.max(1,sets-1);
   if(mode==='comeback') nEx=Math.min(nEx,4);
-  const main=[];
-  for(const pat of T.pats){ if(main.length>=nEx) break; const ex=exForToday(pat); if(!ex) continue; main.push({pat,ex,sets,target:targetFor(ex,mode)}); }
+  const main=[]; const o=todayOverride(); const custom=!!(o.list&&o.list.length);
+  if(custom){ o.list.forEach(id=>{ const ex=EX_BY_ID[id]; if(ex&&hasEquip(ex.need)) main.push({pat:ex.pat,ex,sets,target:targetFor(ex,mode)}); }); }
+  else for(const pat of T.pats){ if(main.length>=nEx) break; const ex=exForToday(pat); if(!ex) continue; main.push({pat,ex,sets,target:targetFor(ex,mode)}); }
   const warm=T.warm.slice(0,P.warm).map(k=>WARM[k]);
   const cool=T.cool.slice(0,P.cool).map(k=>COOL[k]);
-  const menu={tpl,mins,mode,warm,main,cool}; menu.est=estimate(menu); return menu;
+  const menu={tpl,mins,mode,warm,main,cool,custom}; menu.est=estimate(menu); return menu;
 }
 function estimate(menu){
   let s=0;
@@ -923,36 +1027,52 @@ function estimate(menu){
 function figSVG(key,opts={}){
   const F=FIGS[key]||FIGS.stand; const A=F.a;
   const seg=(p,q,cls)=>`<line data-s="${p}-${q}" class="${cls}" x1="0" y1="0" x2="0" y2="0"/>`;
-  let props='';
+  let props='', gear='';
   (F.props||[]).forEach(p=>{
     if(p.t==='rect') props+=`<rect class="prop" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="1.5"/>`;
     else if(p.t==='line') props+=`<line class="propline" x1="${p.x1}" y1="${p.y1}" x2="${p.x2}" y2="${p.y2}"/>`;
     else if(p.t==='bar') props+=`<line class="propline" x1="${p.x1}" y1="${p.y}" x2="${p.x2}" y2="${p.y}"/>`;
-    else if(p.t==='towel') props+=`<line data-s="towel" data-tx="${p.x}" data-ty="${p.y}" class="propline" x1="0" y1="0" x2="0" y2="0" style="stroke:var(--acc);stroke-width:2"/>`;
+    else if(p.t==='anchor') props+=`<line data-s="anchor:${p.from}" data-tx="${p.x}" data-ty="${p.y}" class="band" x1="0" y1="0" x2="0" y2="0"/>`;
+    else if(p.t==='link') props+=`<line data-s="link:${p.from}:${p.to}" class="band" x1="0" y1="0" x2="0" y2="0"/>`;
+    else if(p.t==='pack') props+=`<rect data-s="pack" class="gear" x="0" y="0" width="11" height="8" rx="2"/>`;
+    else if(p.t==='db') gear+=`<rect data-s="db:${p.at}" data-sz="${p.s||1}" class="gear" x="0" y="0" width="${8*(p.s||1)}" height="${4*(p.s||1)}" rx="1"/>`;
   });
   const ground=F.ground===false?'':`<line class="ground" x1="6" y1="92" x2="154" y2="92"/>`;
   let body='';
-  if(A.k2) body+=seg('hp','k2','body2')+seg('k2','a2','body2');
+  if(A.k2) body+=seg('hp','k2','body2')+seg('k2','a2','body2')+`<line data-s="foot2" class="body2" x1="0" y1="0" x2="0" y2="0"/>`;
   if(A.e2) body+=seg('n','e2','body2')+seg('e2','w2','body2');
-  body+=seg('n','hp','body')+seg('hp','k','body')+seg('k','a','body')+seg('n','e','body')+seg('e','w','body');
-  body+=`<circle data-s="h" class="head" cx="0" cy="0" r="6"/>`;
-  const svg=`<svg viewBox="0 0 160 100" data-fig="${key}" ${opts.static?'data-static="1"':''} preserveAspectRatio="xMidYMid meet">${ground}${props}${body}</svg>`;
-  return svg;
+  body+=seg('n','hp','body')+seg('hp','k','body')+seg('k','a','body')+`<line data-s="foot" class="body" x1="0" y1="0" x2="0" y2="0"/>`+seg('n','e','body')+seg('e','w','body');
+  // 顔：鼻（頭からの出っぱり）と目で、どっちが前か分かるようにする
+  body+=`<line data-s="nose" class="nose" x1="0" y1="0" x2="0" y2="0"/><circle data-s="h" class="head" cx="0" cy="0" r="6"/><circle data-s="eye" class="eye" cx="0" cy="0" r="1.7"/>`;
+  return `<svg viewBox="0 0 160 100" data-fig="${key}" ${opts.static?'data-static="1"':''} preserveAspectRatio="xMidYMid meet">${ground}${props}${body}${gear}</svg>`;
 }
+const lerp=(p,q,t)=>p+(q-p)*t;
+const angPair=v=>v===undefined?[0,0]:Array.isArray(v)?v:[v,v];
 function poseAt(key,t){
   const F=FIGS[key]||FIGS.stand, A=F.a, B=F.b||{}; const P={};
-  for(const k in A){ const p=A[k], q=B[k]||p; P[k]=[p[0]+(q[0]-p[0])*t, p[1]+(q[1]-p[1])*t]; }
+  for(const k in A){ const p=A[k], q=B[k]||p; P[k]=[lerp(p[0],q[0],t), lerp(p[1],q[1],t)]; }
+  const fa=angPair(F.face), ta=angPair(F.toes), tb=angPair(F.toes2===undefined?F.toes:F.toes2);
+  P._face=lerp(fa[0],fa[1],t); P._toes=lerp(ta[0],ta[1],t); P._toes2=lerp(tb[0],tb[1],t);
   return P;
 }
 function applyPose(svg,P){
+  const rad=d=>d*Math.PI/180;
   svg.querySelectorAll('[data-s]').forEach(el=>{
     const s=el.dataset.s;
     if(s==='h'){ el.setAttribute('cx',P.h[0]); el.setAttribute('cy',P.h[1]); return; }
-    if(s==='towel'){ el.setAttribute('x1',P.w[0]); el.setAttribute('y1',P.w[1]); el.setAttribute('x2',el.dataset.tx); el.setAttribute('y2',el.dataset.ty); return; }
+    if(s==='eye'){ const a=rad(P._face-28); el.setAttribute('cx',P.h[0]+Math.cos(a)*2.6); el.setAttribute('cy',P.h[1]+Math.sin(a)*2.6); return; }
+    if(s==='nose'){ const a=rad(P._face); el.setAttribute('x1',P.h[0]+Math.cos(a)*3); el.setAttribute('y1',P.h[1]+Math.sin(a)*3); el.setAttribute('x2',P.h[0]+Math.cos(a)*8.5); el.setAttribute('y2',P.h[1]+Math.sin(a)*8.5); return; }
+    if(s==='foot'||s==='foot2'){ const pt=s==='foot'?P.a:P.a2; if(!pt) return; const a=rad(s==='foot'?P._toes:P._toes2); el.setAttribute('x1',pt[0]); el.setAttribute('y1',pt[1]); el.setAttribute('x2',pt[0]+Math.cos(a)*8); el.setAttribute('y2',pt[1]+Math.sin(a)*8); return; }
+    if(s.startsWith('anchor:')){ const pt=P[s.slice(7)]; if(!pt) return; el.setAttribute('x1',pt[0]); el.setAttribute('y1',pt[1]); el.setAttribute('x2',el.dataset.tx); el.setAttribute('y2',el.dataset.ty); return; }
+    if(s.startsWith('link:')){ const [,f,to]=s.split(':'); if(!P[f]||!P[to]) return; el.setAttribute('x1',P[f][0]); el.setAttribute('y1',P[f][1]); el.setAttribute('x2',P[to][0]); el.setAttribute('y2',P[to][1]); return; }
+    if(s.startsWith('db:')){ const pt=P[s.slice(3)]; if(!pt) return; const sz=+el.dataset.sz||1; el.setAttribute('x',pt[0]-4*sz); el.setAttribute('y',pt[1]-2*sz); return; }
+    if(s==='pack'){ const nn=P.n,hp=P.hp; const dx=hp[0]-nn[0],dy=hp[1]-nn[1]; const L=Math.hypot(dx,dy)||1; const ux=dx/L,uy=dy/L; const cx=nn[0]+dx*0.3-uy*7, cy=nn[1]+dy*0.3+ux*7; el.setAttribute('x',cx-5.5); el.setAttribute('y',cy-4); return; }
     const [p,q]=s.split('-'); if(!P[p]||!P[q]) return;
     el.setAttribute('x1',P[p][0]); el.setAttribute('y1',P[p][1]); el.setAttribute('x2',P[q][0]); el.setAttribute('y2',P[q][1]);
   });
 }
+/* 図の下に出す説明（どっちが前か） */
+const figCap=key=>{ const F=FIGS[key]; return `<div class="tiny center" style="margin-top:5px">横から見た図（${esc(F&&F.pos||'')}）・頭のとがった側が<b>顔＝前</b>、足先の短い線が<b>つま先</b></div>`; };
 function animLoop(){
   const now=performance.now();
   const t=(1-Math.cos(now/1400*Math.PI))/2;
@@ -1023,9 +1143,11 @@ function renderHome(){
       <div class="timesel">${[['normal','通常'],['light','軽め'],['comeback','久しぶり']].map(([m,l])=>`<button data-mode="${m}" aria-pressed="${H.mode===m}">${l}<small>${m==='normal'?'いつも通り':m==='light'?'セット−1':'回数7割'}</small></button>`).join('')}</div>
       <ul class="menu">
         ${menu.warm.length?`<li><div class="fig">${figSVG(menu.warm[0].fig)}</div><div><div class="nm">ウォームアップ</div><div class="dt">${menu.warm.map(w=>esc(w.name)).join('・')}</div></div><div class="sr">${menu.warm.length}種</div></li>`:''}
-        ${menu.main.map(m=>`<li data-pat="${m.pat}"><div class="fig">${figSVG(m.ex.fig)}</div><div><div class="nm">${esc(m.ex.name)}</div><div class="dt">${patPill(m.pat)} Lv.${m.ex.lv}${m.ex.sides?' ・左右':''}</div></div><div class="sr">${m.sets}×${m.target}${unit(m.ex)}<br><button class="iconbtn swap" data-pat="${m.pat}" style="font-size:11px;padding:4px 8px;margin-top:3px">入れ替え</button></div></li>`).join('')}
+        ${menu.main.map(m=>`<li data-pat="${m.pat}"><div class="fig">${figSVG(m.ex.fig)}</div><div><div class="nm">${esc(m.ex.name)}</div><div class="dt">${patPill(m.pat)} Lv.${m.ex.lv}${m.ex.sides?' ・左右':''} ${needs(m.ex).map(k=>`<span class="pill" style="font-size:11px;padding:1px 7px">${EQUIP[k].emoji}${esc(EQUIP[k].name.split('・')[0])}</span>`).join('')}</div></div><div class="sr">${m.sets}×${m.target}${unit(m.ex)}<br><button class="iconbtn swap" data-pat="${m.pat}" style="font-size:11px;padding:4px 8px;margin-top:3px">入れ替え</button></div></li>`).join('')}
         ${menu.cool.length?`<li><div class="fig">${figSVG(menu.cool[0].fig)}</div><div><div class="nm">クールダウン</div><div class="dt">${menu.cool.map(c=>esc(c.name)).join('・')}</div></div><div class="sr">${menu.cool.length}種</div></li>`:''}
       </ul>
+      <div class="tiny" style="margin-top:6px">${(()=>{const g=[...new Set(menu.main.flatMap(m=>needs(m.ex)))]; return g.length?'使う道具：'+g.map(k=>EQUIP[k].emoji+esc(EQUIP[k].name.split('・')[0])).join('、'):'道具なしでできるメニュー';})()}${menu.custom?' ・ <span class="pill acc">自分で決めたメニュー</span>':''}</div>
+      <button class="btn sub sm mt" id="menuBtn">🧩 メニューを決める（レベル別・種目別）</button>
       <button class="btn mt" id="startBtn">トレーニングを始める</button>
       <div class="row mt" style="justify-content:center;gap:6px">${TPL_ORDER.map(k=>`<button class="iconbtn tplbtn" data-tpl="${k}" style="${H.tpl===k?'border-color:var(--acc);color:var(--acc)':''}">${TEMPLATES[k].emoji} ${TEMPLATES[k].name}</button>`).join('')}</div>
     </div>`;
@@ -1065,6 +1187,7 @@ function renderHome(){
   $$('#v-home [data-mode]').forEach(b=>b.onclick=()=>{H.mode=b.dataset.mode;renderHome();});
   $$('#v-home .tplbtn').forEach(b=>b.onclick=()=>{H.tpl=b.dataset.tpl;renderHome();});
   $$('#v-home .swap').forEach(b=>b.onclick=()=>openSwap(b.dataset.pat));
+  const mb=$('#menuBtn'); if(mb) mb.onclick=openMenuBuilder;
   $$('#v-home .lv').forEach(b=>b.onclick=()=>openLadder(b.dataset.pat));
   const sb=$('#startBtn'); if(sb) sb.onclick=()=>startWorkout(buildMenu(H.tpl,H.mins,H.mode));
   const st=$('#stretchBtn'); if(st) st.onclick=()=>startStretch();
@@ -1075,13 +1198,43 @@ function renderHome(){
 
 /* 種目の入れ替え */
 function openSwap(pat){
-  const cur=exForToday(pat); const L=ladder(pat);
+  const o=todayOverride(); const cur=o.list?EX_BY_ID[o.list.find(id=>EX_BY_ID[id]&&EX_BY_ID[id].pat===pat)]:exForToday(pat); const L=ladder(pat);
   const opts=L.filter(e=>hasEquip(e.need)).map(e=>{
     const tag=cur&&e.id===cur.id?'いま':e.lv<S.levels[pat]?'やさしい':e.lv>S.levels[pat]?'むずかしい':'同じレベル';
-    return `<div class="st ${cur&&e.id===cur.id?'cur':''}" data-ex="${e.id}" style="--pc:${PATTERNS[pat].color}"><div class="num">${e.lv}</div><div><div class="nm">${esc(e.name)}</div><div class="meta">${tag} ・ ${e.range[0]}〜${e.range[1]}${unit(e)}${e.sides?' ・左右':''}</div></div></div>`; }).join('');
+    return `<div class="st ${cur&&e.id===cur.id?'cur':''}" data-ex="${e.id}" style="--pc:${PATTERNS[pat].color}"><div class="num">${e.lv}</div><div class="fig" style="width:52px;height:34px;flex:none;background:var(--bg2);border-radius:8px">${figSVG(e.fig,{static:true})}</div><div><div class="nm">${esc(e.name)}</div><div class="meta">${tag} ・ ${e.range[0]}〜${e.range[1]}${unit(e)}${e.sides?' ・左右':''}${e.need?' ・'+needName(e):''}</div></div></div>`; }).join('');
   openModal(`<h3>${PATTERNS[pat].name}の種目を入れ替え</h3><p class="muted">今日だけ変えます（レベルは変わりません）。難しいほうを最後までこなせたら、次回からそのレベルになります。</p><div class="ladder">${opts}</div><button class="btn ghost mt" id="skipPat">今日はこのパターンをとばす</button>`);
-  $$('#modalBox .st').forEach(el=>el.onclick=()=>{ todayOverride()[pat]=el.dataset.ex; save(); closeModal(); renderHome(); });
-  $('#skipPat').onclick=()=>{ todayOverride()[pat]=null; save(); closeModal(); renderHome(); toast(`${PATTERNS[pat].name}を今日はとばします`); };
+  $$('#modalBox .st').forEach(el=>el.onclick=()=>{ const o=todayOverride(); if(o.list){ const i=o.list.findIndex(id=>EX_BY_ID[id]&&EX_BY_ID[id].pat===pat); if(i>=0) o.list[i]=el.dataset.ex; else o.list.push(el.dataset.ex); } else o.map[pat]=el.dataset.ex; save(); closeModal(); renderHome(); });
+  $('#skipPat').onclick=()=>{ const o=todayOverride(); if(o.list) o.list=o.list.filter(id=>!(EX_BY_ID[id]&&EX_BY_ID[id].pat===pat)); else o.map[pat]=null; save(); closeModal(); renderHome(); toast(`${PATTERNS[pat].name}を今日はとばします`); };
+}
+/* メニュービルダー：レベルでまとめて／種目ごとに、今日のメニューを決める */
+function openMenuBuilder(){
+  const T=TEMPLATES[H.tpl]; const order=[...T.pats,...PAT_ORDER.filter(p=>!T.pats.includes(p))];
+  const menu=buildMenu(H.tpl,H.mins,H.mode);
+  const B={lv:0,sel:{},persist:false}; order.forEach(p=>B.sel[p]=null); menu.main.forEach(m=>B.sel[m.pat]=m.ex.id);
+  const maxAll=Math.max(...PAT_ORDER.map(maxLv));
+  const draw=()=>{
+    const chips=`<div class="choice"><button data-lv="0" aria-pressed="${B.lv===0}">いつもの<small>自動</small></button>${[...Array(maxAll)].map((_,i)=>`<button data-lv="${i+1}" aria-pressed="${B.lv===i+1}" style="min-width:56px">Lv.${i+1}</button>`).join('')}</div>`;
+    const rows=order.map(p=>{ const opts=ladder(p).filter(e=>hasEquip(e.need)); const on=!!B.sel[p];
+      return `<div class="mbrow ${on?'':'off'}"><label class="check"><input type="checkbox" data-inc="${p}" ${on?'checked':''}><div>${PATTERNS[p].emoji} ${PATTERNS[p].name}<small>${T.pats.includes(p)?'今日の型に入っている':'追加'}</small></div></label><select data-pat="${p}" ${on?'':'disabled'}>${opts.map(e=>`<option value="${e.id}" ${B.sel[p]===e.id?'selected':''}>Lv.${e.lv} ${esc(e.name)}${e.need?' '+needs(e).map(k=>EQUIP[k].emoji).join(''):''}</option>`).join('')}</select></div>`; }).join('');
+    const picked=order.filter(p=>B.sel[p]).map(p=>EX_BY_ID[B.sel[p]]);
+    const gear=[...new Set(picked.flatMap(needs))];
+    $('#modalBox').innerHTML=`<div class="handle"></div><h3>メニューを決める</h3><p class="muted">今日のメニューを、レベルでまとめて／種目ごとに選べます。チェックを外したパターンはやりません。</p>
+      <b style="font-size:14px">レベルでまとめて選ぶ</b><div class="tiny" style="margin-bottom:6px">レベルは「いまのレベル」（ホームの表）の段。道具がない種目は自動で一段下になります。</div>${chips}
+      <b style="font-size:14px;display:block;margin-top:14px">種目ごとに選ぶ</b>${rows}
+      <div class="tiny mt">${picked.length}種目 ・ ${gear.length?'使う道具：'+gear.map(k=>EQUIP[k].emoji+esc(EQUIP[k].name.split('・')[0])).join('、'):'道具なし'}</div>
+      <label class="check mt"><input type="checkbox" id="mbPersist" ${B.persist?'checked':''}><div>次回からもこのレベルにする<small>各パターンの「いまのレベル」を、選んだ種目の段に変更します</small></div></label>
+      <div class="btnrow mt"><button class="btn sub" id="mbReset">自動にもどす</button><button class="btn" id="mbApply">このメニューにする</button></div>`;
+    $$('#modalBox [data-lv]').forEach(b=>b.onclick=()=>{ B.lv=+b.dataset.lv; order.forEach(p=>{ if(!B.sel[p]) return; B.sel[p]=(B.lv===0?pickEx(p):pickEx(p,Math.min(B.lv,maxLv(p)))).id; }); draw(); });
+    $$('#modalBox [data-inc]').forEach(c=>c.onchange=()=>{ const p=c.dataset.inc; B.sel[p]=c.checked?(B.lv===0?pickEx(p):pickEx(p,Math.min(B.lv,maxLv(p)))).id:null; draw(); });
+    $$('#modalBox select[data-pat]').forEach(sl=>sl.onchange=()=>{ B.sel[sl.dataset.pat]=sl.value; draw(); });
+    $('#mbPersist').onchange=e=>{B.persist=e.target.checked;};
+    $('#mbReset').onclick=()=>{ S.override={date:'',map:{},list:null}; save(); closeModal(); renderHome(); toast('自動のメニューにもどしました'); };
+    $('#mbApply').onclick=()=>{ const list=order.filter(p=>B.sel[p]).map(p=>B.sel[p]); if(!list.length){toast('1つ以上えらんでください');return;}
+      const o=todayOverride(); o.list=list; o.map={};
+      if(B.persist){ list.forEach(id=>{ const e=EX_BY_ID[id]; S.levels[e.pat]=e.lv; }); }
+      save(); closeModal(); renderHome(); toast(B.persist?'メニューとレベルを変更しました':'今日のメニューを決めました'); };
+  };
+  openModal(''); draw();
 }
 /* ラダー表示（レベルの詳細） */
 function openLadder(pat){
@@ -1089,14 +1242,14 @@ function openLadder(pat){
   openModal(`<h3>${PATTERNS[pat].emoji} ${PATTERNS[pat].name} <span class="tiny">${PATTERNS[pat].sub}</span></h3>
     <p class="muted">回数の上限まで届いたら次の段へ。「きつすぎ」が2回続くと一段もどります。設定からも手動で変えられます。</p>
     <div class="ladder">${L.map(e=>{ const na=!hasEquip(e.need); const best=S.last[e.id]?Math.max(...S.last[e.id].reps):null;
-      return `<div class="st ${e.lv===cur?'cur':e.lv<cur?'done':''} ${na?'na':''}" data-ex="${e.id}" style="--pc:${PATTERNS[pat].color}"><div class="num">${e.lv<cur&&!na?'✓':e.lv}</div><div><div class="nm">${esc(e.name)}</div><div class="meta">${e.range[0]}〜${e.range[1]}${unit(e)}${e.sides?' ・左右':''}${e.need?' ・要 '+EQUIP[e.need].name.split('・')[0]:''}${na?'（道具がないので飛ばす）':''}</div></div><div class="rt">${best!==null?'最高 '+best+unit(e):''}</div></div>`; }).join('')}</div>`);
+      return `<div class="st ${e.lv===cur?'cur':e.lv<cur?'done':''} ${na?'na':''}" data-ex="${e.id}" style="--pc:${PATTERNS[pat].color}"><div class="num">${e.lv<cur&&!na?'✓':e.lv}</div><div><div class="nm">${esc(e.name)}</div><div class="meta">${e.range[0]}〜${e.range[1]}${unit(e)}${e.sides?' ・左右':''}${e.need?' ・要 '+needName(e):''}${na?'（道具がないので飛ばす）':''}${!na&&pickEx(pat,e.lv).id===e.id&&e.lv===cur?' ・いま使う種目':''}</div></div><div class="rt">${best!==null?'最高 '+best+unit(e):''}</div></div>`; }).join('')}</div>`);
   $$('#modalBox .st').forEach(el=>el.onclick=()=>openExDetail(el.dataset.ex));
 }
 function openExDetail(id){
   const e=EX_BY_ID[id]; const pat=e.pat; const last=S.last[e.id];
   openModal(`<h3>${esc(e.name)} <span class="tiny">Lv.${e.lv}</span></h3>
-    <div class="row wrap" style="gap:6px;margin-bottom:8px">${patPill(pat)}<span class="pill">${e.range[0]}〜${e.range[1]}${unit(e)}</span>${e.sides?'<span class="pill">左右</span>':''}${e.need?`<span class="pill info">要 ${esc(EQUIP[e.need].name)}</span>`:''}</div>
-    <div class="figbig fig">${figSVG(e.fig)}</div>
+    <div class="row wrap" style="gap:6px;margin-bottom:8px">${patPill(pat)}<span class="pill">${e.range[0]}〜${e.range[1]}${unit(e)}</span>${e.sides?'<span class="pill">左右</span>':''}${e.need?`<span class="pill info">要 ${esc(needName(e))}</span>`:''}</div>
+    <div class="figbig fig">${figSVG(e.fig)}</div>${figCap(e.fig)}
     <p class="muted mt">${esc(e.desc)}</p>
     <b style="font-size:14px">やり方</b><ul class="cues">${e.how.map((h,i)=>`<li data-n="${i+1}">${esc(h)}</li>`).join('')}</ul>
     <b style="font-size:14px">よくあるミス</b><ul class="cues miss">${e.miss.map(h=>`<li>${esc(h)}</li>`).join('')}</ul>
@@ -1216,7 +1369,7 @@ function renderExec(){
   if(st.type==='timed'){
     const it=st.item; const sideLbl=it.sides?`<span class="sidebadge">${R.side===0?'左':'右'}</span>`:'';
     if(R.phase==='intro'){
-      body.innerHTML=`<div class="stagename">${st.group==='warm'?'WARM-UP':'COOL-DOWN'}</div><div class="exname">${esc(it.name)}<small>${st.secs}秒${it.sides?' × 左右':''}</small></div><div class="figbig fig">${figSVG(it.fig)}</div>${cueList(it.how)}<p class="tiny mt">${st.group==='warm'?'ケガを防いで、本番でちゃんと力が出るようにする時間。がんばらなくてOK。':'使った筋肉をゆるめる時間。痛気持ちいいところで止めて、深呼吸。'}</p>`;
+      body.innerHTML=`<div class="stagename">${st.group==='warm'?'WARM-UP':'COOL-DOWN'}</div><div class="exname">${esc(it.name)}<small>${st.secs}秒${it.sides?' × 左右':''}</small></div><div class="figbig fig">${figSVG(it.fig)}</div>${figCap(it.fig)}${cueList(it.how)}<p class="tiny mt">${st.group==='warm'?'ケガを防いで、本番でちゃんと力が出るようにする時間。がんばらなくてOK。':'使った筋肉をゆるめる時間。痛気持ちいいところで止めて、深呼吸。'}</p>`;
       foot.innerHTML=`<div class="btnrow"><button class="btn ghost" id="skipBtn">とばす</button><button class="btn" id="goBtn">スタート</button></div>`;
       $('#goBtn').onclick=()=>{ audioInit(); R.phase='prep'; setTimer('prep',S.settings.prep); renderExec(); };
       $('#skipBtn').onclick=()=>{ R.si++; const nx=stage(); R.phase='intro'; R.timer=null; if(nx.type==='done') finishSession(false); renderExec(); };
@@ -1237,7 +1390,7 @@ function renderExec(){
     const head=`<div class="stagename">${PATTERNS[st.pat].name.toUpperCase()} ・ Lv.${ex.lv}</div><div class="exname">${esc(ex.name)}<small>セット ${R.set}/${st.sets}</small></div>`;
     const sideLbl=ex.sides?`<span class="sidebadge">${R.side===0?'左':'右'}</span>`:'';
     if(R.phase==='intro'){
-      body.innerHTML=`${head}${dots}<div class="figbig fig">${figSVG(ex.fig)}</div>
+      body.innerHTML=`${head}${dots}<div class="figbig fig">${figSVG(ex.fig)}</div>${figCap(ex.fig)}
         <div class="target"><b>${st.sets} × ${st.target}<span style="font-size:20px">${unit(ex)}</span></b><small>${ex.sides?'左右それぞれ ・ ':''}目標（前回の記録から自動で決めています）</small></div>
         <b style="font-size:14px">やり方</b>${cueList(ex.how)}<b style="font-size:14px">よくあるミス</b>${cueList(ex.miss,'miss')}
         <p class="tiny mt">楽すぎたら：${esc(ex.easy)} ／ きつすぎたら：${esc(ex.hard)}</p>`;
@@ -1323,7 +1476,7 @@ function finishSession(partial){
     }
   });
   const sess={id:uid(),date:today,kind:'train',tpl:R.menu.tpl,mode:R.menu.mode,mins:R.menu.mins,partial:!!partial,dur:Math.round((Date.now()-R.startedAt)/1000),items,ups,downs,note:''};
-  S.sessions.push(sess); S.override={date:'',map:{}}; save(); R.saved=sess; return sess;
+  S.sessions.push(sess); S.override={date:'',map:{},list:null}; save(); R.saved=sess; return sess;
 }
 
 /* =====================================================================
@@ -1385,7 +1538,7 @@ function renderLib(){
     const pats=LIB.pat==='all'?PAT_ORDER:[LIB.pat];
     html=filt+pats.map(pat=>`<div class="card tight"><h2>${PATTERNS[pat].emoji} ${PATTERNS[pat].name} <span class="sub">${PATTERNS[pat].sub} ・ いま Lv.${S.levels[pat]}</span></h2>
       <div class="ladder">${ladder(pat).map(e=>{ const na=!hasEquip(e.need); const cur=e.lv===S.levels[pat];
-        return `<div class="st ${cur?'cur':e.lv<S.levels[pat]?'done':''} ${na?'na':''}" data-ex="${e.id}" style="--pc:${PATTERNS[pat].color}"><div class="num">${e.lv}</div><div class="fig" style="width:52px;height:34px;flex:none">${figSVG(e.fig,{static:true})}</div><div><div class="nm">${esc(e.name)}</div><div class="meta">${e.range[0]}〜${e.range[1]}${unit(e)}${e.sides?' ・左右':''}${e.need?' ・要 '+esc(EQUIP[e.need].name.split('・')[0]):''}</div></div>${cur?'<div class="rt">いまここ</div>':''}</div>`; }).join('')}</div></div>`).join('');
+        return `<div class="st ${cur?'cur':e.lv<S.levels[pat]?'done':''} ${na?'na':''}" data-ex="${e.id}" style="--pc:${PATTERNS[pat].color}"><div class="num">${e.lv}</div><div class="fig" style="width:52px;height:34px;flex:none">${figSVG(e.fig,{static:true})}</div><div><div class="nm">${esc(e.name)}</div><div class="meta">${e.range[0]}〜${e.range[1]}${unit(e)}${e.sides?' ・左右':''}${e.need?' ・要 '+esc(needName(e)):''}</div></div>${cur?`<div class="rt">${pickEx(pat).id===e.id?'いまここ':'同じ段'}</div>`:''}</div>`; }).join('')}</div></div>`).join('');
   }else{
     html=`<div class="card tight">${KNOWLEDGE.map(k=>`<details class="acc"><summary>${k.emoji} ${esc(k.title)}</summary><div class="bd">${k.body}</div></details>`).join('')}</div>
       <div class="card tight"><h2>このアプリの仕組み</h2><div class="tiny">
@@ -1393,6 +1546,8 @@ function renderLib(){
       ・今日の目標回数は「前回の最小回数＋1」。きつすぎなら据え置き、楽すぎなら＋2。<br>
       ・昨日やったなら今日は休み。3日連続はやらない。7日以上あいたら7割で再開。<br>
       ・A「押す＋しゃがむ」→ B「引く＋片足」→ C「全身」の順番に回ります。曜日は決めません。<br>
+      ・道具（椅子／タオル＋ドア／テーブル／鉄棒／ダンベル／チューブ／リュック）の有無で種目を自動で飛ばし、同じ段に道具あり版があればそちらを優先します（設定で切替）。<br>
+      ・「メニューを決める」で Lv.○ にまとめて／パターンごとに種目を選べます（今日だけ／次回以降も固定）。<br>
       ・データはこの端末の中だけに保存されます（サーバーには送りません）。設定から書き出しできます。</div></div>`;
   }
   $('#v-lib').innerHTML=sub+html;
@@ -1415,7 +1570,8 @@ function renderSet(){
       <label class="f">1回の時間（初期値）</label>${choice('time',[[10,'10分'],[20,'20分'],[30,'30分']],p.time)}
     </div>
     <div class="card tight"><h2>持っている道具</h2><p class="tiny">チェックを外すと、その道具が必要な種目は自動で飛ばされます。</p>
-      ${Object.entries(EQUIP).map(([k,e])=>`<label class="check"><input type="checkbox" data-eq="${k}" ${S.equip[k]?'checked':''}><div>${esc(e.name)}<small>${esc(e.desc)}</small></div></label>`).join('')}
+      ${Object.entries(EQUIP).map(([k,e])=>`<label class="check"><input type="checkbox" data-eq="${k}" ${S.equip[k]?'checked':''}><div>${e.emoji} ${esc(e.name)} <span class="pill" style="font-size:11px">＋${EX.filter(x=>needs(x).includes(k)).length}種目</span><small>${esc(e.desc)}</small></div></label>`).join('')}
+      <label class="check" style="margin-top:10px;border-color:color-mix(in srgb,var(--acc) 50%,var(--line))"><input type="checkbox" id="prefIn" ${st.preferEquip?'checked':''}><div>持っている道具の種目を優先する<small>同じ段に「道具あり版」があれば、そちらを自動で選びます（例: スクワット → ゴブレットスクワット）</small></div></label>
     </div>
     <div class="card tight"><h2>トレーニング中</h2>
       <label class="f">セット間の休憩</label>${choice('rest',[[45,'45秒'],[60,'60秒'],[90,'90秒']],st.rest)}
@@ -1440,10 +1596,11 @@ function renderSet(){
     if(k in S.profile) S.profile[k]=v; else S.settings[k]=v;
     save(); if(k==='theme') applyTheme(); renderSet(); }));
   $$('#v-set [data-eq]').forEach(i=>i.onchange=()=>{S.equip[i.dataset.eq]=i.checked;save();renderSet();});
+  $('#prefIn').onchange=e=>{S.settings.preferEquip=e.target.checked;save();renderSet();};
   $('#sndIn').onchange=e=>{S.settings.sound=e.target.checked;save();};
   $('#vibIn').onchange=e=>{S.settings.vib=e.target.checked;save();};
   $$('#v-set .lvm').forEach(b=>b.onclick=()=>{const p=b.dataset.pat; const pv=prevAvail(p,S.levels[p]); if(pv){S.levels[p]=pv.lv;save();renderSet();} else toast('これ以上下げられません');});
-  $$('#v-set .lvp').forEach(b=>b.onclick=()=>{const p=b.dataset.pat; const nx=nextAvail(p,S.levels[p]); if(nx){S.levels[p]=nx.lv;save();renderSet();} else { const up=ladder(p).find(e=>e.lv>S.levels[p]); toast(up?`上の段は「${EQUIP[up.need].name.split('・')[0]}」が必要です（道具にチェック）`:'最高レベルです'); }});
+  $$('#v-set .lvp').forEach(b=>b.onclick=()=>{const p=b.dataset.pat; const nx=nextAvail(p,S.levels[p]); if(nx){S.levels[p]=nx.lv;save();renderSet();} else { const up=ladder(p).find(e=>e.lv>S.levels[p]); toast(up?`上の段は「${needName(up)}」が必要です（道具にチェック）`:'最高レベルです'); }});
   $('#expBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`zero-kintore-${dkey()}.json`; document.body.appendChild(a); a.click(); a.remove(); toast('書き出しました'); };
   $('#impBtn').onclick=()=>$('#impFile').click();
   $('#impFile').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(!d.levels||!d.sessions) throw 0; S=deepMerge(DEFAULT_STATE(),d); save(); applyTheme(); renderSet(); toast('読み込みました'); }catch(err){ toast('ファイルが読めませんでした'); } }; rd.readAsText(f); e.target.value=''; };
@@ -1475,7 +1632,7 @@ function renderOnb(){
     foot.innerHTML=`<div class="btnrow"><button class="btn sub" id="obBack">もどる</button><button class="btn" id="obNext">つぎへ</button></div>`;
   }else if(OB.step===2){
     body.innerHTML=`${steps}<h1>使える道具は？</h1><p class="muted">なくても全パターンできます。あるものにチェックすると種目が増えます。</p>
-      ${Object.entries(EQUIP).map(([k,e])=>`<label class="check"><input type="checkbox" data-eq="${k}" ${OB.equip[k]?'checked':''}><div>${esc(e.name)}<small>${esc(e.desc)}</small></div></label>`).join('')}`;
+      ${Object.entries(EQUIP).map(([k,e])=>`<label class="check"><input type="checkbox" data-eq="${k}" ${OB.equip[k]?'checked':''}><div>${e.emoji} ${esc(e.name)} <span class="pill" style="font-size:11px">＋${EX.filter(x=>needs(x).includes(k)).length}種目</span><small>${esc(e.desc)}</small></div></label>`).join('')}`;
     foot.innerHTML=`<div class="btnrow"><button class="btn sub" id="obBack">もどる</button><button class="btn" id="obNext">つぎへ</button></div>`;
   }else if(OB.step===3){
     body.innerHTML=`${steps}<h1>いまの体力は？</h1><p class="muted">だいたいでOK。ここで最初のレベルを決めます（やってみて合わなければ自動で調整されます）。</p>
