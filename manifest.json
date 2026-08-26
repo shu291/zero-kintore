@@ -1,0 +1,18 @@
+{
+  "name": "ゼロから筋トレ — 初心者のための自重トレーニング",
+  "short_name": "ゼロ筋トレ",
+  "description": "道具なし・1回20分・週3回。今日のメニューを自動で決めて、できるようになったら次の段へ。初心者向け筋トレアプリ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
