@@ -178,6 +178,22 @@ nav.tabs button[aria-current="true"]{color:var(--acc)}
 .mbrow .check{flex:0 0 118px;margin:0;padding:9px 10px;font-size:13px}
 .mbrow select{flex:1;padding:10px;font-size:14px}
 .mbrow.off select{opacity:.4}
+.phasebar{display:flex;gap:3px;flex:1;max-width:160px}
+.phasebar i{flex:1;height:6px;border-radius:3px;background:var(--card2);border:1px solid var(--line)}
+.phasebar i.on{background:var(--acc);border-color:transparent}
+.phasebar i.dl.on{background:var(--info)}
+.recov .rc span{font-weight:800;color:var(--fg)}
+.recov .rc.rec{opacity:.55}
+.recov .rc.ok span{color:var(--ok)}
+.recov .rc.old span{color:var(--warn)}
+.recov .rc.pain{border-color:var(--bad)}
+.recov .rc.pain span{color:var(--bad)}
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.badges .bd{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;opacity:.4}
+.badges .bd.on{opacity:1;border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--bg2))}
+.badges .bd span{font-size:24px;display:block;line-height:1.2}
+.badges .bd b{font-size:12px;display:block}
+.badges .bd small{font-size:10px;color:var(--dim2);display:block;line-height:1.3}
 .figbig{width:100%;max-width:360px;margin:0 auto;aspect-ratio:16/10;background:var(--bg2);border-radius:16px;border:1px solid var(--line);overflow:hidden}
 
 /* ---------- exec overlay ---------- */
@@ -889,6 +905,49 @@ const KNOWLEDGE = [
 <ul><li><b>筋肉痛</b>：にぶい痛み／筋肉の広い範囲／翌日〜翌々日に出て2〜3日で消える／動かすと少しラク</li><li><b>ケガ</b>：鋭い痛み／関節（ひざ・肩・手首・腰）／トレーニング中や直後に出た／動かすと悪化</li></ul>
 <p><b>ケガのサインなら、その日は中止。</b>数日たっても痛い、腫れている、しびれるなら病院へ。がまんして続けると、数週間の休みになります。</p>
 <p>手首が痛いときはこぶしを握った腕立て（ナックルプッシュアップ）や、手のひらの下にタオルを敷くだけで楽になることが多いです。</p>`},
+{id:'k13',emoji:'🔄',title:'期分けとコンディション（このアプリの自動調整）',body:`
+<p>強くなるには「負荷を上げる」と「回復する」の両方が要ります。このアプリは4週で1サイクル：<b>導入 → 積み上げ → 強化 → 回復（ディロード）</b>。回復週はセットを1つ減らし回数を7割にして、たまった疲れを抜きます。抜いたあとの週に回数がスッと伸びるのが典型パターンです。</p>
+<p>開始前の<b>コンディションチェック</b>（睡眠・筋肉痛・気分）が低い日は自動で軽めにします。「今日はサボり」ではなく「計画どおりの調整」。無理をした1回より、続けられる10回のほうが強くなります。</p>
+<p><b>回復マップ</b>は部位ごとの「最後にやった日」。48時間あいていない部位は回復中なので、あいている部位の多い型を自動で選びます。3回続けて回数が伸びない種目は<b>停滞</b>として知らせ、対策（テンポを変える／一段やさしく／回復週）を出します。</p>`},
+];
+
+/* ---------- 痛みの部位 → 外すパターン ---------- */
+const PAIN_PARTS={
+  wrist:{name:'手首',avoid:['push','vpush'],tip:'こぶしを握った腕立て（ナックル）や、手のひらの下にタオルを敷くと楽なことが多い'},
+  elbow:{name:'ひじ',avoid:['push','vpush','pull'],tip:'押す・引くを休ませる。脚と体幹はできる'},
+  shoulder:{name:'肩',avoid:['push','vpush','pull'],tip:'腕を上げる動きを休ませる。痛みが続くなら受診'},
+  back:{name:'腰',avoid:['hinge','core'],tip:'前かがみ・反る動きを休ませる。歩く・軽いスクワットは回復を助けることが多い'},
+  knee:{name:'ひざ',avoid:['squat','lunge'],tip:'しゃがむ動きを休ませる。上半身と体幹はできる'},
+  ankle:{name:'足首',avoid:['lunge','squat'],tip:'ジャンプ・片足を休ませる'},
+  neck:{name:'首',avoid:['vpush','core'],tip:'頭に体重が乗る動き・首に力が入る動きを休ませる'},
+};
+/* ---------- 4週サイクル（期分け） ---------- */
+const PHASES=[
+  {name:'導入',desc:'フォームを覚える週。回数は控えめでOK'},
+  {name:'積み上げ',desc:'「前回＋1回」を積み上げる週'},
+  {name:'強化',desc:'回数を伸ばす週。レベルアップのチャンス'},
+  {name:'回復',desc:'ディロード。セット−1・回数7割で疲れを抜くと、次の週にスッと伸びる'},
+];
+/* ---------- 実績 ---------- */
+const BADGES=[
+ {id:'first',emoji:'🌱',name:'はじめの一歩',desc:'最初のトレーニングを完了',test:st=>st.n>=1},
+ {id:'s5',emoji:'🔥',name:'5回目',desc:'トレーニング5回',test:st=>st.n>=5},
+ {id:'s10',emoji:'💪',name:'10回目',desc:'トレーニング10回',test:st=>st.n>=10},
+ {id:'s25',emoji:'🏅',name:'25回目',desc:'トレーニング25回',test:st=>st.n>=25},
+ {id:'s50',emoji:'🏆',name:'50回目',desc:'トレーニング50回',test:st=>st.n>=50},
+ {id:'s100',emoji:'👑',name:'100回目',desc:'トレーニング100回',test:st=>st.n>=100},
+ {id:'lv1',emoji:'🆙',name:'初レベルアップ',desc:'どれかのパターンで次の段へ',test:st=>st.ups>=1},
+ {id:'lv5',emoji:'🪜',name:'5段のぼった',desc:'レベルアップ合計5回',test:st=>st.ups>=5},
+ {id:'w4',emoji:'📅',name:'4週連続',desc:'週目標を4週連続で達成',test:st=>st.weekStreak>=4},
+ {id:'w12',emoji:'🗓️',name:'12週連続',desc:'見た目が変わるライン',test:st=>st.weekStreak>=12},
+ {id:'pushup10',emoji:'🫸',name:'腕立て10回',desc:'ふつうのプッシュアップを1セット10回',test:st=>(st.best.push4||0)>=10},
+ {id:'plank60',emoji:'🧘',name:'プランク60秒',desc:'プランクを60秒キープ',test:st=>(st.best.core3||0)>=60},
+ {id:'squat20',emoji:'🦵',name:'スクワット20回',desc:'スクワットを1セット20回',test:st=>(st.best.squat3||0)>=20},
+ {id:'pullup1',emoji:'🧗',name:'懸垂1回',desc:'自重トレの王様を1回',test:st=>(st.best.pull8||0)>=1},
+ {id:'test1',emoji:'📏',name:'初チェックテスト',desc:'筋力スコアを記録',test:st=>st.tests>=1},
+ {id:'comeback',emoji:'🔁',name:'カムバック',desc:'7日以上あいてから再開した',test:st=>st.comeback>=1},
+ {id:'early',emoji:'🌅',name:'朝トレ',desc:'午前中にトレーニング',test:st=>st.morning>=1},
+ {id:'allpat',emoji:'🌈',name:'全パターン制覇',desc:'7つのパターンすべてをやった',test:st=>st.pats>=7},
 ];
 
 /* 今日のひとこと（ホームに順番に出す） */
@@ -933,12 +992,14 @@ const DEFAULT_STATE=()=>({
   v:1,
   profile:{name:'',goal:'fit',days:3,time:20,onboarded:false,created:dkey()},
   equip:{chair:true,towel:true,table:false,bar:false,db:false,band:false,bag:false},
-  settings:{rest:60,coreRest:45,sound:true,vib:true,theme:'dark',prep:5,hideInstall:false,preferEquip:true},
+  settings:{rest:60,coreRest:45,sound:true,vib:true,theme:'dark',prep:5,hideInstall:false,preferEquip:true,checkin:true,tempo:false},
   levels:{push:1,vpush:1,pull:1,squat:1,lunge:1,hinge:1,core:1},
   last:{},
   sessions:[],
   body:[],
   override:{date:'',map:{},list:null},
+  checkins:[], pain:[], tests:[], badges:{},
+  program:{deload:[],skipDeload:[]},
 });
 let S=load();
 function load(){ try{const raw=localStorage.getItem(KEY); if(raw) return deepMerge(DEFAULT_STATE(),JSON.parse(raw));}catch(e){console.warn(e);} return DEFAULT_STATE(); }
@@ -970,7 +1031,7 @@ function targetFor(ex,mode){
   if(!last||!last.reps||!last.reps.length) t=ex.range[0];
   else{ const base=Math.min(...last.reps); t= last.fb==='hard'?base : last.fb==='easy'?base+step*2 : base+step; }
   t=clamp(t,ex.range[0],ex.range[1]);
-  if(mode==='comeback') t=Math.max(ex.range[0],Math.round(t*0.7/step)*step);
+  if(mode==='comeback'||mode==='deload') t=Math.max(ex.range[0],Math.round(t*0.7/step)*step);
   return t;
 }
 const restFor=ex=>ex.pat==='core'?S.settings.coreRest:S.settings.rest;
@@ -987,18 +1048,122 @@ function plan(){
   const todayDone=main.some(s=>s.date===today);
   const y1=main.some(s=>s.date===addDays(today,-1)), y2=main.some(s=>s.date===addDays(today,-2));
   const wk=sessionsInWeek(weekStart(today)).length;
-  let tpl=last&&TEMPLATES[last.tpl]?TPL_ORDER[(TPL_ORDER.indexOf(last.tpl)+1)%3]:'A';
+  const avoid=avoidPats(); const pw=programWeek(); const ci=todayCheckin();
+  const ch=chooseTemplate(avoid,last); const tpl=ch.tpl;
   const reasons=[]; let kind='train', mode='normal';
   if(todayDone){ kind='done'; }
   else if(y1&&y2){ kind='rest'; reasons.push('2日連続でトレーニングずみ。3日連続はやらない'); }
   else if(y1){ kind='rest'; reasons.push('昨日トレーニングした。筋肉は休んでいる間に育つ'); }
   else{
     if(daysSince!==null&&daysSince>=7){ mode='comeback'; reasons.push(`${daysSince}日ぶり。回数7割・セット少なめで再開`); }
+    else if(pw.phase===3){ mode='deload'; reasons.push(`第${pw.week}週は回復週（ディロード）。セット−1・回数7割で疲れを抜く`); }
     if(wk>=S.profile.days){ if(mode==='normal') mode='light'; reasons.push(`今週の目標 ${S.profile.days}回 はもう達成。やるなら軽めに`); }
-    if(last) reasons.push(`前回は「${TEMPLATES[last.tpl]?.name||'—'}」（${daysSince}日前）→ 今日は「${TEMPLATES[tpl].name}」`);
+    if(ci&&ci.score<=4&&mode==='normal'){ mode='light'; reasons.push('今日のコンディションが低め → 軽めにする'); }
+    if(last){ const gap=ch.gaps[tpl]; reasons.push(`前回は「${TEMPLATES[last.tpl]?.name||'—'}」（${daysSince}日前）。${gap?`「${gap}」があいているので`:'順番どおり'}「${TEMPLATES[tpl].name}」`); }
     else reasons.push('はじめての日。回数よりフォームを覚えるのが目標');
+    if(avoid.length) reasons.push(`痛みの登録で ${avoid.map(p=>PATTERNS[p].name).join('・')} を外している`);
   }
-  return {kind,mode,tpl,daysSince,wk,reasons,last,todaySession:main.find(s=>s.date===today)};
+  return {kind,mode,tpl,daysSince,wk,reasons,last,todaySession:main.find(s=>s.date===today),avoid,pw,ci};
+}
+/* ---------- 期分け・回復マップ・痛み・コンディション・停滞・実績・テスト ---------- */
+function patternLastDates(){ const m={}; trainSessions().forEach(s=>s.items.forEach(i=>{ if(!m[i.pat]||m[i.pat]<s.date) m[i.pat]=s.date; })); return m; }
+function activePain(){ const t=dkey(); return (S.pain||[]).filter(p=>PAIN_PARTS[p.part]&&daysBetween(p.from,t)<p.days); }
+function avoidPats(){ const set=new Set(); activePain().forEach(p=>PAIN_PARTS[p.part].avoid.forEach(x=>set.add(x))); return [...set]; }
+function programWeek(){
+  const first=trainSessions().map(s=>s.date).sort()[0]||S.profile.created; const ws=weekStart(dkey());
+  const weeks=Math.max(0,Math.round(daysBetween(weekStart(first),ws)/7)); let phase=weeks%4;
+  if(S.program.deload.includes(ws)) phase=3; else if(phase===3&&S.program.skipDeload.includes(ws)) phase=1;
+  return {week:weeks+1,cycle:Math.floor(weeks/4)+1,phase,ws};
+}
+/* 型（A/B/C）の選択：あいている部位が多い型を優先。差がなければ順番どおり */
+function chooseTemplate(avoid,last){
+  const lastD=patternLastDates(); const today=dkey();
+  const rot=last&&TEMPLATES[last.tpl]?TPL_ORDER[(TPL_ORDER.indexOf(last.tpl)+1)%3]:'A';
+  let best=rot,bestScore=-Infinity; const gaps={};
+  TPL_ORDER.forEach(k=>{ const pats=TEMPLATES[k].pats.filter(p=>!avoid.includes(p)).slice(0,4); let sc=0; const g=[];
+    pats.forEach(p=>{ const d=lastD[p]?Math.min(14,daysBetween(lastD[p],today)):14; sc+=d; if(lastD[p]&&d>=5) g.push(PATTERNS[p].name); });
+    if(k===rot) sc+=0.5; gaps[k]=g.join('・'); if(sc>bestScore){bestScore=sc;best=k;} });
+  return {tpl:best,gaps};
+}
+function todayCheckin(){ return (S.checkins||[]).find(c=>c.date===dkey()); }
+function weekStreak(){ let ws=weekStart(dkey()); let k=0; if(sessionsInWeek(ws).length>=S.profile.days) k++; ws=addDays(ws,-7); while(sessionsInWeek(ws).length>=S.profile.days&&k<600){ k++; ws=addDays(ws,-7); } return k; }
+function weekReport(ws){
+  const ss=sessionsInWeek(ws); const perPat={}; PAT_ORDER.forEach(p=>perPat[p]=0); let sets=0,reps=0,ups=0;
+  ss.forEach(s=>{ ups+=(s.ups||[]).length; s.items.forEach(i=>{ sets+=i.sets.length; reps+=i.sets.reduce((a,b)=>a+b,0); if(perPat[i.pat]!==undefined) perPat[i.pat]+=i.sets.length; }); });
+  const we=addDays(ws,6); const ci=(S.checkins||[]).filter(c=>c.date>=ws&&c.date<=we);
+  return {n:ss.length,sets,reps,ups,perPat,ready:ci.length?ci.reduce((a,c)=>a+c.score,0)/ci.length:null};
+}
+/* 停滞：直近3回の「最小セット回数」が伸びていない種目 */
+function plateaus(){
+  const hist={}; trainSessions().sort((a,b)=>a.date<b.date?-1:1).forEach(s=>s.items.forEach(i=>{ if(!i.sets.length) return; (hist[i.ex]=hist[i.ex]||[]).push(Math.min(...i.sets)); }));
+  const out=[]; for(const id in hist){ const h=hist[id]; const ex=EX_BY_ID[id]; if(!ex||h.length<3) continue; const l3=h.slice(-3); if(Math.max(...l3)<=l3[0]&&l3[0]<ex.range[1]) out.push({ex,reps:l3}); }
+  return out;
+}
+function testDue(){ const k=trainSessions().length; if(!S.tests.length) return k>=4; const d=daysBetween(S.tests[S.tests.length-1].date,dkey()); return d>=28?d:false; }
+function badgeStats(){
+  const T=trainSessions(); const best={}; const pats=new Set();
+  T.forEach(s=>s.items.forEach(i=>{ pats.add(i.pat); const m=Math.max(0,...i.sets); if(!best[i.ex]||best[i.ex]<m) best[i.ex]=m; }));
+  return {n:T.length,ups:T.reduce((a,s)=>a+(s.ups||[]).length,0),weekStreak:weekStreak(),best,tests:S.tests.length,comeback:T.filter(s=>s.mode==='comeback').length,morning:T.filter(s=>s.t&&new Date(s.t).getHours()<12).length,pats:pats.size};
+}
+function checkBadges(){ const st=badgeStats(); const fresh=[]; BADGES.forEach(b=>{ if(S.badges[b.id]) return; try{ if(b.test(st)){ S.badges[b.id]=dkey(); fresh.push(b); } }catch(e){} }); return fresh; }
+/* テンポ音：低い音で下ろしはじめ（2秒）→ 高い音で上げる（1秒） */
+let tempoT=null;
+function tempoStart(){ tempoStop(); const cyc=()=>{ beep(440,.12,.2); setTimeout(()=>beep(880,.12,.2),2000); }; cyc(); tempoT=setInterval(cyc,3000); }
+function tempoStop(){ if(tempoT){ clearInterval(tempoT); tempoT=null; } }
+/* コンディションチェック（3タップ） */
+function openCheckin(then){
+  const C={sleep:null,sore:null,mood:null};
+  const q=(k,title,opts)=>`<label class="f">${title}</label><div class="choice" data-k="${k}">${opts.map((o,i)=>`<button data-v="${3-i}" aria-pressed="${C[k]===3-i}">${o}</button>`).join('')}</div>`;
+  const draw=()=>{
+    const ok=C.sleep&&C.sore&&C.mood; const sc=ok?C.sleep+C.sore+C.mood:0;
+    $('#modalBox').innerHTML=`<div class="handle"></div><h3>今日のコンディション</h3><p class="muted">3タップで終わり。低い日は自動で軽めにします（無理に頑張らないのも計画のうち）。</p>
+      ${q('sleep','睡眠',['よく寝た','ふつう','寝不足'])}${q('sore','筋肉痛・疲れ',['なし','少しある','つらい'])}${q('mood','気分',['いける','ふつう','だるい'])}
+      ${ok?`<div class="tipbox mt">${sc>=8?'絶好調。回数を伸ばすチャンス':sc>=5?'ふつう。いつも通りで':'低め → 今日は軽めメニューにします'}（${sc}/9）</div>`:''}
+      <div class="btnrow mt"><button class="btn ghost" id="ciSkip">今日はスキップ</button><button class="btn" id="ciOk" ${ok?'':'disabled'}>決定</button></div>`;
+    $$('#modalBox .choice[data-k] button').forEach(b=>b.onclick=()=>{ C[b.closest('.choice').dataset.k]=+b.dataset.v; draw(); });
+    $('#ciSkip').onclick=()=>{ closeModal(); then(null); };
+    $('#ciOk').onclick=()=>{ const score=C.sleep+C.sore+C.mood; S.checkins=(S.checkins||[]).filter(c=>c.date!==dkey()); S.checkins.push({date:dkey(),sleep:C.sleep,sore:C.sore,mood:C.mood,score}); save(); closeModal(); then(score); };
+  };
+  openModal(''); draw();
+}
+/* 痛いところの登録 */
+function openPain(){
+  const P={part:null,days:7};
+  const draw=()=>{
+    $('#modalBox').innerHTML=`<div class="handle"></div><h3>🩹 痛いところを登録</h3><p class="muted">登録した部位を使うパターンを、期間中はメニューから外します。筋肉痛ではなく「関節の鋭い痛み」のときに。</p>
+      <label class="f">どこ？</label><div class="choice">${Object.entries(PAIN_PARTS).map(([k,v])=>`<button data-part="${k}" aria-pressed="${P.part===k}">${v.name}</button>`).join('')}</div>
+      <label class="f">どのくらい休ませる？</label><div class="choice">${[[3,'3日'],[7,'1週間'],[14,'2週間']].map(([d,l])=>`<button data-days="${d}" aria-pressed="${P.days===d}">${l}</button>`).join('')}</div>
+      ${P.part?`<div class="tipbox mt">外すパターン：<b>${PAIN_PARTS[P.part].avoid.map(x=>PATTERNS[x].name).join('・')}</b><br>${esc(PAIN_PARTS[P.part].tip)}</div>`:''}
+      <div class="tiny mt">数日たっても痛い・腫れている・しびれる → 病院へ。</div>
+      <div class="btnrow mt"><button class="btn sub" id="pnNo">やめる</button><button class="btn" id="pnOk" ${P.part?'':'disabled'}>登録する</button></div>`;
+    $$('#modalBox [data-part]').forEach(b=>b.onclick=()=>{P.part=b.dataset.part;draw();});
+    $$('#modalBox [data-days]').forEach(b=>b.onclick=()=>{P.days=+b.dataset.days;draw();});
+    $('#pnNo').onclick=closeModal;
+    $('#pnOk').onclick=()=>{ S.pain=(S.pain||[]).filter(x=>x.part!==P.part); S.pain.push({id:uid(),part:P.part,from:dkey(),days:P.days}); save(); closeModal(); H.tpl=null; render(); toast(`${PAIN_PARTS[P.part].name}を${P.days}日休ませます`); };
+  };
+  openModal(''); draw();
+}
+/* チェックテスト（4週に1回の答え合わせ） */
+function openTest(){
+  const pushEx=pickEx('push'); const T={push:0,squat:0,plank:0,running:false,start:0}; let swT=null;
+  const draw=()=>{
+    $('#modalBox').innerHTML=`<div class="handle"></div><h3>📏 チェックテスト</h3><p class="muted">それぞれ全力で1回ずつ。間に2〜3分休む。フォームが崩れたらそこで終わり。</p>
+      <label class="f">1. ${esc(pushEx.name)}：続けて最大何回？</label><div class="stepper"><button data-st="push" data-d="-1">−</button><div><b id="tPush">${T.push}</b><small>回</small></div><button data-st="push" data-d="1">＋</button></div>
+      <label class="f">2. スクワット（太ももが床と平行まで）：最大何回？</label><div class="stepper"><button data-st="squat" data-d="-1">−</button><div><b id="tSquat">${T.squat}</b><small>回</small></div><button data-st="squat" data-d="1">＋</button></div>
+      <label class="f">3. プランク：最長何秒？</label><div class="row"><div class="stepper grow" style="margin:0"><button data-st="plank" data-d="-5">−</button><div><b id="tPlank">${T.plank}</b><small>秒</small></div><button data-st="plank" data-d="5">＋</button></div><button class="btn sub xs" id="swBtn">${T.running?'⏹ 止める':'▶ 計る'}</button></div>
+      <div class="tiny mt">スコア＝腕立て×2＋スクワット＋プランク秒÷2。${S.tests.length?`前回のスコア ${S.tests[S.tests.length-1].score}`:'はじめてのテスト'}</div>
+      <div class="btnrow mt"><button class="btn sub" id="tsNo">やめる</button><button class="btn ok" id="tsOk">保存する</button></div>`;
+    $$('#modalBox [data-st]').forEach(b=>b.onclick=()=>{ const k=b.dataset.st; T[k]=Math.max(0,Math.min(999,T[k]+(+b.dataset.d))); $('#t'+k[0].toUpperCase()+k.slice(1)).textContent=T[k]; });
+    $('#swBtn').onclick=()=>{ if(T.running){ T.running=false; clearInterval(swT); T.plank=Math.round((Date.now()-T.start)/1000); chime(); draw(); } else { audioInit(); T.running=true; T.start=Date.now(); beep(1320,.2,.3); swT=setInterval(()=>{ const el=$('#tPlank'); if(el) el.textContent=Math.round((Date.now()-T.start)/1000); },250); $('#swBtn').textContent='⏹ 止める'; } };
+    $('#tsNo').onclick=()=>{ clearInterval(swT); closeModal(); };
+    $('#tsOk').onclick=()=>{ clearInterval(swT); if(T.running) T.plank=Math.round((Date.now()-T.start)/1000);
+      const score=T.push*2+T.squat+Math.round(T.plank/2); const prev=S.tests[S.tests.length-1];
+      S.tests=S.tests.filter(t=>t.date!==dkey()); S.tests.push({date:dkey(),pushEx:pushEx.id,push:T.push,squat:T.squat,plank:T.plank,score});
+      const fresh=checkBadges(); save(); closeModal(); render();
+      toast(prev?`スコア ${score}（前回 ${prev.score} → ${score>prev.score?'+'+(score-prev.score)+'、伸びた！':score===prev.score?'同じ':'−'+(prev.score-score)}）`:`スコア ${score} を記録。4週後にまた測ろう`);
+      if(fresh.length) setTimeout(()=>toast(`実績「${fresh[0].name}」を獲得！`),2400); };
+  };
+  openModal(''); draw();
 }
 /* ホーム画面での一時的な選択（時間・型・モード） */
 const H={tpl:null,mins:null,mode:null};
@@ -1006,11 +1171,15 @@ const H={tpl:null,mins:null,mode:null};
 function buildMenu(tpl,mins,mode){
   const T=TEMPLATES[tpl], P=TIME_PLAN[mins]||TIME_PLAN[20];
   let nEx=P.ex, sets=P.sets;
-  if(mode==='light'||mode==='comeback') sets=Math.max(1,sets-1);
+  if(mode==='light'||mode==='comeback'||mode==='deload') sets=Math.max(1,sets-1);
   if(mode==='comeback') nEx=Math.min(nEx,4);
-  const main=[]; const o=todayOverride(); const custom=!!(o.list&&o.list.length);
-  if(custom){ o.list.forEach(id=>{ const ex=EX_BY_ID[id]; if(ex&&hasEquip(ex.need)) main.push({pat:ex.pat,ex,sets,target:targetFor(ex,mode)}); }); }
-  else for(const pat of T.pats){ if(main.length>=nEx) break; const ex=exForToday(pat); if(!ex) continue; main.push({pat,ex,sets,target:targetFor(ex,mode)}); }
+  const main=[]; const o=todayOverride(); const custom=!!(o.list&&o.list.length); const avoid=avoidPats();
+  if(custom){ o.list.forEach(id=>{ const ex=EX_BY_ID[id]; if(ex&&hasEquip(ex.need)&&!avoid.includes(ex.pat)) main.push({pat:ex.pat,ex,sets,target:targetFor(ex,mode)}); }); }
+  else{
+    for(const pat of T.pats){ if(main.length>=nEx) break; if(avoid.includes(pat)) continue; const ex=exForToday(pat); if(!ex) continue; main.push({pat,ex,sets,target:targetFor(ex,mode)}); }
+    // 痛みや「とばす」で減ったぶんは、型に入っていないパターンで埋める
+    for(const pat of PAT_ORDER){ if(main.length>=nEx) break; if(avoid.includes(pat)||main.some(m=>m.pat===pat)||(pat in o.map&&!o.map[pat])) continue; const ex=exForToday(pat); if(ex) main.push({pat,ex,sets,target:targetFor(ex,mode)}); }
+  }
   const warm=T.warm.slice(0,P.warm).map(k=>WARM[k]);
   const cool=T.cool.slice(0,P.cool).map(k=>COOL[k]);
   const menu={tpl,mins,mode,warm,main,cool,custom}; menu.est=estimate(menu); return menu;
@@ -1128,6 +1297,8 @@ function renderHome(){
   const dots=[...Array(7)].map((_,i)=>{ const k=addDays(ws,i); const on=trainSessions().some(s=>s.date===k); const st=S.sessions.some(s=>s.date===k&&s.kind==='stretch'); return `<div class="d ${on?'on':''} ${k===today?'today':''}" title="${k}">${on?'✓':st?'～':WD[parseKey(k).getDay()]}</div>`; }).join('');
   const name=S.profile.name?`${esc(S.profile.name)}さん、`:'';
   const tipIdx=Math.abs(daysBetween(S.profile.created,today))%TIPS.length;
+  const pw=p.pw; const ciTxt=v=>v===3?'◎':v===2?'○':'△';
+  const phaseBar=`<div class="row" style="gap:8px;margin-top:6px"><span class="tiny">第${pw.week}週 ・ <b style="color:${pw.phase===3?'var(--info)':'var(--acc)'}">${PHASES[pw.phase].name}期</b></span><div class="phasebar">${[0,1,2,3].map(i=>`<i class="${i===pw.phase?'on':''} ${i===3?'dl':''}" title="${PHASES[i].name}"></i>`).join('')}</div></div><div class="tiny">${PHASES[pw.phase].desc}${p.ci?` ・ 今日のコンディション ${p.ci.score}/9（睡眠${ciTxt(p.ci.sleep)} 疲れ${ciTxt(p.ci.sore)} 気分${ciTxt(p.ci.mood)}）`:''}</div>`;
   let hero='';
   if(p.kind==='train'){
     const menu=buildMenu(H.tpl,H.mins,H.mode);
@@ -1135,12 +1306,12 @@ function renderHome(){
     hero=`<div class="card hero">
       <div class="kicker">${fmtDate(today)} ・ トレーニング日</div>
       <h1>${name}今日は「${esc(T.name)}」 ${T.emoji}</h1>
-      <div class="row wrap" style="gap:6px"><div class="weekdots">${dots}</div><span class="tiny">今週 ${p.wk}/${S.profile.days}回</span></div>
+      <div class="row wrap" style="gap:6px"><div class="weekdots">${dots}</div><span class="tiny">今週 ${p.wk}/${S.profile.days}回</span></div>${phaseBar}
       <ul class="reasons">${p.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
       <div class="sep"></div>
       <div class="row" style="justify-content:space-between"><b style="font-size:14px">時間</b><span class="tiny">目安 約${Math.round(menu.est/60)}分</span></div>
       <div class="timesel">${[10,20,30].map(m=>`<button data-mins="${m}" aria-pressed="${H.mins===m}">${m}分<small>${m===10?'短め':m===20?'標準':'しっかり'}</small></button>`).join('')}</div>
-      <div class="timesel">${[['normal','通常'],['light','軽め'],['comeback','久しぶり']].map(([m,l])=>`<button data-mode="${m}" aria-pressed="${H.mode===m}">${l}<small>${m==='normal'?'いつも通り':m==='light'?'セット−1':'回数7割'}</small></button>`).join('')}</div>
+      <div class="timesel">${[['normal','通常','いつも通り'],['light','軽め','セット−1'],['comeback','久しぶり','回数7割'],['deload','回復週','−1＆7割']].map(([m,l,d])=>`<button data-mode="${m}" aria-pressed="${H.mode===m}">${l}<small>${d}</small></button>`).join('')}</div>
       <ul class="menu">
         ${menu.warm.length?`<li><div class="fig">${figSVG(menu.warm[0].fig)}</div><div><div class="nm">ウォームアップ</div><div class="dt">${menu.warm.map(w=>esc(w.name)).join('・')}</div></div><div class="sr">${menu.warm.length}種</div></li>`:''}
         ${menu.main.map(m=>`<li data-pat="${m.pat}"><div class="fig">${figSVG(m.ex.fig)}</div><div><div class="nm">${esc(m.ex.name)}</div><div class="dt">${patPill(m.pat)} Lv.${m.ex.lv}${m.ex.sides?' ・左右':''} ${needs(m.ex).map(k=>`<span class="pill" style="font-size:11px;padding:1px 7px">${EQUIP[k].emoji}${esc(EQUIP[k].name.split('・')[0])}</span>`).join('')}</div></div><div class="sr">${m.sets}×${m.target}${unit(m.ex)}<br><button class="iconbtn swap" data-pat="${m.pat}" style="font-size:11px;padding:4px 8px;margin-top:3px">入れ替え</button></div></li>`).join('')}
@@ -1155,7 +1326,7 @@ function renderHome(){
     hero=`<div class="card hero rest">
       <div class="kicker">${fmtDate(today)} ・ 休息日</div>
       <h1>${name}今日は休む日 🛌</h1>
-      <div class="row wrap" style="gap:6px"><div class="weekdots">${dots}</div><span class="tiny">今週 ${p.wk}/${S.profile.days}回</span></div>
+      <div class="row wrap" style="gap:6px"><div class="weekdots">${dots}</div><span class="tiny">今週 ${p.wk}/${S.profile.days}回</span></div>${phaseBar}
       <ul class="reasons">${p.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
       <p class="muted" style="margin:10px 0 0">筋肉が作り直されるのに48〜72時間かかります。今日はしっかり食べて、よく寝るのがトレーニング。</p>
       <div class="btnrow mt"><button class="btn sub" id="stretchBtn">🧘 ストレッチ 5分</button><button class="btn ghost" id="forceBtn">それでもやる（軽め）</button></div>
@@ -1165,7 +1336,7 @@ function renderHome(){
     hero=`<div class="card hero done">
       <div class="kicker">${fmtDate(today)} ・ 完了</div>
       <h1>${name}今日の分は終わり！ 🎉</h1>
-      <div class="row wrap" style="gap:6px"><div class="weekdots">${dots}</div><span class="tiny">今週 ${p.wk}/${S.profile.days}回</span></div>
+      <div class="row wrap" style="gap:6px"><div class="weekdots">${dots}</div><span class="tiny">今週 ${p.wk}/${S.profile.days}回</span></div>${phaseBar}
       <div class="stat3 mt"><div><b>${sets}</b><small>セット</small></div><div><b>${s.items.length}</b><small>種目</small></div><div><b>${Math.round(s.dur/60)}</b><small>分</small></div></div>
       ${s.ups?.length?`<div class="levelup mt">🆙 ${s.ups.map(u=>`${PATTERNS[u.pat].name}：${esc(u.to)}`).join(' / ')}</div>`:''}
       <p class="muted" style="margin:10px 0 0">次は${p.wk>=S.profile.days?'来週':'明後日以降'}。今日はよく食べてよく寝よう。</p>
@@ -1177,7 +1348,15 @@ function renderHome(){
     <ul class="cues"><li data-n="1">まず「20分・通常」で1回やってみる。回数は目安、できなくてもOK</li><li data-n="2">画面の棒人間と「よくあるミス」を見ながら、形をまねする</li><li data-n="3">終わったら「楽すぎ／ちょうど／きつい」を正直に答える。次回の目標がそれで決まる</li></ul></div>`:'';
   const isStandalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
   const install=(!isStandalone&&!S.settings.hideInstall)?`<div class="card tight" id="installCard"><div class="row"><div class="grow"><b style="font-size:14px">📲 ホーム画面に追加すると使いやすい</b><div class="tiny">iPhone: 共有ボタン → 「ホーム画面に追加」／Android: メニュー → 「アプリをインストール」</div></div><button class="iconbtn" id="hideInstall">✕</button></div></div>`:'';
-  $('#v-home').innerHTML=hero+`
+  const lastD=patternLastDates();
+  const recov=`<div class="card tight"><h2>回復マップ <span class="sub">同じ部位は48時間あける</span></h2><div class="lvgrid recov">${PAT_ORDER.map(pt=>{ const d=lastD[pt]; const ds=d?daysBetween(d,today):null; const stt=p.avoid.includes(pt)?'pain':ds===null?'none':ds<2?'rec':ds>=10?'old':'ok'; const lbl=ds===null?'まだ':ds===0?'今日':`${ds}日前`; const txt={pain:'痛み',none:'—',rec:'回復中',old:'あいてる',ok:'OK'}[stt]; return `<div class="lv rc ${stt}" style="--pc:${PATTERNS[pt].color}"><b>${PATTERNS[pt].name}</b><span style="font-size:13px">${lbl}</span><small>${txt}</small></div>`; }).join('')}</div><div class="row mt" style="gap:8px"><span class="tiny grow">「あいてる」部位が多い型を自動で優先します</span><button class="iconbtn" id="painAdd">🩹 痛いところ</button></div></div>`;
+  const pains=activePain();
+  const painCard=pains.length?`<div class="card tight"><h2>🩹 痛みの記録</h2>${pains.map(pn=>`<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><div class="grow"><b style="font-size:14px">${PAIN_PARTS[pn.part].name}</b> <span class="tiny">あと${pn.days-daysBetween(pn.from,today)}日 ・ ${PAIN_PARTS[pn.part].avoid.map(x=>PATTERNS[x].name).join('・')}を外す</span><div class="tiny">${esc(PAIN_PARTS[pn.part].tip)}</div></div><button class="iconbtn painDone" data-id="${pn.id}">治った</button></div>`).join('')}<div class="tiny mt">鋭い痛み・腫れ・しびれが数日続くなら病院へ。</div></div>`:'';
+  const pl=p.kind==='train'?plateaus().filter(x=>S.levels[x.ex.pat]===x.ex.lv).slice(0,3):[];
+  const plateauCard=pl.length?`<div class="card tight"><h2>🧱 停滞かも</h2>${pl.map(x=>`<div style="padding:5px 0;border-top:1px dashed var(--line)"><b style="font-size:14px">${esc(x.ex.name)}</b><div class="tiny">直近3回：${x.reps.join(' → ')}${unit(x.ex)}。伸びていません</div></div>`).join('')}<div class="tiny mt">まず睡眠・食事を見直す。そのうえで対策を1つ：</div><div class="btnrow mt"><button class="btn sub sm" id="plTempo">🎵 テンポ音で丁寧に</button><button class="btn sub sm" id="plDown">一段やさしく（今日）</button><button class="btn sub sm" id="plDeload">今週を回復週に</button></div></div>`:'';
+  const td=testDue();
+  const testCard=td?`<div class="card tight"><h2>📏 チェックテスト <span class="sub">4週に1回</span></h2><p class="muted" style="margin:0 0 8px">${S.tests.length?`前回から${td}日。`:'4回以上トレーニングしたので、'}いまの力を測って「筋力スコア」を残そう（約10分・全力で1回ずつ）。</p><button class="btn sub sm" id="testBtn">テストをする</button></div>`:'';
+  $('#v-home').innerHTML=hero+recov+painCard+plateauCard+testCard+`
     <div class="card tight"><h2>いまのレベル <span class="sub">タップで詳細</span></h2><div class="lvgrid">${PAT_ORDER.map(pat=>`<div class="lv" data-pat="${pat}" style="--pc:${PATTERNS[pat].color}"><b>${PATTERNS[pat].name}</b><span>${S.levels[pat]}</span><small>/ ${maxLv(pat)}</small></div>`).join('')}</div></div>
     ${guide}
     <div class="card tight"><div class="tipbox">💡 <b>今日のひとこと</b><br>${esc(TIPS[tipIdx])}</div></div>
@@ -1189,7 +1368,13 @@ function renderHome(){
   $$('#v-home .swap').forEach(b=>b.onclick=()=>openSwap(b.dataset.pat));
   const mb=$('#menuBtn'); if(mb) mb.onclick=openMenuBuilder;
   $$('#v-home .lv').forEach(b=>b.onclick=()=>openLadder(b.dataset.pat));
-  const sb=$('#startBtn'); if(sb) sb.onclick=()=>startWorkout(buildMenu(H.tpl,H.mins,H.mode));
+  const sb=$('#startBtn'); if(sb) sb.onclick=()=>{ const go=()=>startWorkout(buildMenu(H.tpl,H.mins,H.mode)); if(S.settings.checkin&&!todayCheckin()) openCheckin(sc=>{ if(sc!==null&&sc<=4&&H.mode==='normal'){ H.mode='light'; toast('コンディション低め → 今日は軽めにします'); } else if(sc!==null&&sc>=8) toast('絶好調！回数を伸ばすチャンス'); go(); }); else go(); };
+  const pa=$('#painAdd'); if(pa) pa.onclick=openPain;
+  $$('#v-home .painDone').forEach(b=>b.onclick=()=>{ S.pain=S.pain.filter(x=>x.id!==b.dataset.id); save(); H.tpl=null; renderHome(); toast('治ってよかった！'); });
+  const pt=$('#plTempo'); if(pt) pt.onclick=()=>{ S.settings.tempo=true; save(); toast('テンポ音をONにしました（セット中に鳴ります）'); };
+  const pd=$('#plDown'); if(pd) pd.onclick=()=>{ pl.forEach(x=>{ const pv=prevAvail(x.ex.pat,x.ex.lv); if(pv) todayOverride().map[x.ex.pat]=pv.id; }); save(); renderHome(); toast('今日は一段やさしい種目にしました'); };
+  const pdl=$('#plDeload'); if(pdl) pdl.onclick=()=>{ const ws=weekStart(dkey()); if(!S.program.deload.includes(ws)) S.program.deload.push(ws); S.program.skipDeload=S.program.skipDeload.filter(w=>w!==ws); save(); H.tpl=null; renderHome(); toast('今週を回復週にしました'); };
+  const tb=$('#testBtn'); if(tb) tb.onclick=openTest;
   const st=$('#stretchBtn'); if(st) st.onclick=()=>startStretch();
   const fb=$('#forceBtn'); if(fb) fb.onclick=()=>{ H.planKind='train'; H.mode='light'; H.tpl=p.tpl; H.mins=S.profile.time; startWorkout(buildMenu(H.tpl,H.mins,'light')); };
   const lb=$('#logBtn'); if(lb) lb.onclick=()=>$$('nav.tabs button')[1].click();
@@ -1255,6 +1440,7 @@ function openExDetail(id){
     <b style="font-size:14px">よくあるミス</b><ul class="cues miss">${e.miss.map(h=>`<li>${esc(h)}</li>`).join('')}</ul>
     <div class="row wrap mt" style="gap:8px"><span class="pill ok">楽にする: ${esc(e.easy)}</span><span class="pill warn">きつくする: ${esc(e.hard)}</span></div>
     ${last?`<p class="tiny mt">前回 ${fmtDate(last.date)}：${last.reps.join(' / ')}${unit(e)}（${({easy:'楽すぎ',ok:'ちょうど',hard:'きつすぎ'})[last.fb]||'—'}）</p>`:''}
+    ${(()=>{ const hs=trainSessions().sort((a,b)=>a.date<b.date?-1:1).flatMap(s=>s.items.filter(i=>i.ex===e.id&&i.sets.length).map(i=>({d:s.date,v:Math.min(...i.sets)}))).slice(-12); if(hs.length<2) return ''; const vals=hs.map(h=>h.v); const mn=Math.min(...vals,e.range[0])-1, mx=Math.max(...vals,e.range[1])+1; const BW=320,BH=90,pl=26,pb=16; const X=i=>pl+i*(BW-pl-8)/(hs.length-1), Y=v=>BH-pb-(v-mn)/(mx-mn)*(BH-pb-8); return `<div class="mt"><b style="font-size:14px">回数の推移 <span class="tiny">（各回の最小セット）</span></b><svg class="chart" viewBox="0 0 ${BW} ${BH}"><line class="goal" x1="${pl}" y1="${Y(e.range[1])}" x2="${BW-4}" y2="${Y(e.range[1])}"/><text x="2" y="${Y(e.range[1])+4}">上限</text><polyline class="ln" points="${hs.map((h,i)=>`${X(i)},${Y(h.v)}`).join(' ')}"/>${hs.map((h,i)=>`<circle class="pt" cx="${X(i)}" cy="${Y(h.v)}" r="3"/>`).join('')}<text x="${X(0)}" y="${BH-3}">${fmtDate(hs[0].d)}</text><text x="${X(hs.length-1)}" y="${BH-3}" text-anchor="end">${fmtDate(hs[hs.length-1].d)}</text></svg></div>`; })()}
     ${hasEquip(e.need)&&S.levels[pat]!==e.lv?`<button class="btn sub mt" id="setLv">この種目を「いまのレベル」にする</button>`:''}`);
   const b=$('#setLv'); if(b) b.onclick=()=>{ S.levels[pat]=e.lv; save(); closeModal(); render(); toast(`${PATTERNS[pat].name}をLv.${e.lv}にしました`); };
 }
@@ -1272,7 +1458,7 @@ function startStretch(){
 }
 function startWorkout(menu){ if(!menu.main.length){toast('種目がありません。設定で道具を確認してください');return;} beginRun(menu,'train'); }
 function beginRun(menu,kind){
-  R.menu=menu; R.kind=kind; R.stages=[]; R.saved=null;
+  R.menu=menu; R.kind=kind; R.stages=[]; R.saved=null; R.newBadges=[];
   menu.warm.forEach(w=>R.stages.push({type:'timed',item:w,group:'warm',secs:w.secs}));
   menu.main.forEach(m=>R.stages.push({type:'ex',pat:m.pat,ex:m.ex,sets:m.sets,target:m.target,results:[],fb:null}));
   menu.cool.forEach(c=>R.stages.push({type:'timed',item:c,group:'cool',secs:c.secs}));
@@ -1283,7 +1469,7 @@ function beginRun(menu,kind){
   $('#execSound').textContent=S.settings.sound?'🔊':'🔇';
   renderExec();
 }
-function endRun(){ R.on=false; clearInterval(tickT); R.timer=null; $('#exec').classList.remove('on'); document.body.style.overflow=''; wakeLock(false); render(); }
+function endRun(){ R.on=false; clearInterval(tickT); R.timer=null; tempoStop(); $('#exec').classList.remove('on'); document.body.style.overflow=''; wakeLock(false); render(); }
 $('#execClose').onclick=()=>{
   const anyDone=R.stages.some(s=>s.type==='ex'&&s.results.length);
   if(R.stages[R.si].type==='done'){ endRun(); return; }
@@ -1363,6 +1549,7 @@ function nextBox(){
 }
 function renderExec(){
   const st=stage(); const body=$('#execBody'), foot=$('#execFoot');
+  if(!(st.type==='ex'&&R.phase==='work')) tempoStop();
   $('#execBar').style.width=progressPct()+'%';
   const mainIdx=R.stages.filter((s,i)=>s.type==='ex'&&i<=R.si).length, mainN=R.stages.filter(s=>s.type==='ex').length;
   $('#execLbl').textContent= st.type==='timed'?(st.group==='warm'?'ウォームアップ':'クールダウン'):st.type==='ex'?`種目 ${mainIdx}/${mainN}`:'完了';
@@ -1401,7 +1588,10 @@ function renderExec(){
       body.innerHTML=`${head}${dots}<div class="figbig fig" style="max-width:300px;aspect-ratio:16/9">${figSVG(ex.fig)}</div>
         <div class="target"><small>目標</small><b>${st.target}<span style="font-size:20px">回</span></b><small>${ex.sides?'左右それぞれ ・ ':''}下ろすときは2〜3秒かけて</small></div>
         <div class="stepper"><button id="repM">−</button><div><b id="repV">${R.reps}</b><small>できた回数</small></div><button id="repP">＋</button></div>
-        <p class="tiny center">${esc(ex.how[1]||ex.how[0])}</p>`;
+        <p class="tiny center">${esc(ex.how[1]||ex.how[0])}</p>
+        <div class="center"><button class="iconbtn" id="tempoBtn">${S.settings.tempo?'🎵 テンポ音 ON':'🎵 テンポ音 OFF'}</button><div class="tiny">低い音で下ろしはじめ（2秒）→ 高い音で上げる（1秒）</div></div>`;
+      if(S.settings.tempo) tempoStart();
+      $('#tempoBtn').onclick=()=>{ S.settings.tempo=!S.settings.tempo; save(); if(S.settings.tempo){ audioInit(); tempoStart(); } else tempoStop(); $('#tempoBtn').textContent=S.settings.tempo?'🎵 テンポ音 ON':'🎵 テンポ音 OFF'; };
       foot.innerHTML=`<div class="btnrow"><button class="btn ghost" id="stopBtn">ここでやめる</button><button class="btn ok" id="doneBtn">できた ✓</button></div>`;
       $('#repM').onclick=()=>{R.reps=Math.max(0,R.reps-1);$('#repV').textContent=R.reps;};
       $('#repP').onclick=()=>{R.reps=Math.min(99,R.reps+1);$('#repV').textContent=R.reps;};
@@ -1443,6 +1633,7 @@ function renderExec(){
       ${s?`<div class="stat3"><div><b>${Math.max(1,Math.round(s.dur/60))}</b><small>分</small></div><div><b>${sets}</b><small>セット</small></div><div><b>${reps}</b><small>合計${s.items.some(i=>EX_BY_ID[i.ex].kind==='time')?'回/秒':'回'}</small></div></div>`:''}
       ${s&&s.ups.length?s.ups.map(u=>`<div class="levelup pop">🆙 ${PATTERNS[u.pat].name}がレベルアップ！ → ${esc(u.to)}<small>${esc(u.msg)}</small></div>`).join(''):''}
       ${s&&s.downs.length?s.downs.map(u=>`<div class="levelup" style="border-color:var(--warn)">🔧 ${PATTERNS[u.pat].name}を一段やさしく → ${esc(u.to)}<small>「きつすぎ」が2回続いたので、フォームを固め直す作戦です</small></div>`).join(''):''}
+      ${R.newBadges&&R.newBadges.length?R.newBadges.map(b=>`<div class="levelup pop" style="border-color:var(--warn)">${b.emoji} 実績「${esc(b.name)}」を獲得！<small>${esc(b.desc)}</small></div>`).join(''):''}
       ${s?`<table style="width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px">${s.items.map(i=>`<tr><td style="padding:5px 0;border-top:1px solid var(--line)">${esc(EX_BY_ID[i.ex].name)}</td><td style="padding:5px 0;border-top:1px solid var(--line);text-align:right;white-space:nowrap">${i.sets.join(' / ')}${unit(EX_BY_ID[i.ex])} ${({easy:'😎',ok:'🙂',hard:'🥵'})[i.fb]||''}</td></tr>`).join('')}</table>
       <label class="f">ひとことメモ（任意）</label><input type="text" id="noteIn" placeholder="例: 腕立てでひじが痛かった、今日は調子よかった" maxlength="80">`:''}`;
     foot.innerHTML=`<button class="btn" id="finBtn">ホームにもどる</button>`;
@@ -1475,8 +1666,8 @@ function finishSession(partial){
       const pv=prevAvail(pat,ex.lv); if(pv){ S.levels[pat]=pv.lv; S.last[ex.id].hardStreak=0; downs.push({pat,from:ex.name,to:pv.name}); }
     }
   });
-  const sess={id:uid(),date:today,kind:'train',tpl:R.menu.tpl,mode:R.menu.mode,mins:R.menu.mins,partial:!!partial,dur:Math.round((Date.now()-R.startedAt)/1000),items,ups,downs,note:''};
-  S.sessions.push(sess); S.override={date:'',map:{},list:null}; save(); R.saved=sess; return sess;
+  const sess={id:uid(),date:today,t:R.startedAt,kind:'train',tpl:R.menu.tpl,mode:R.menu.mode,mins:R.menu.mins,partial:!!partial,dur:Math.round((Date.now()-R.startedAt)/1000),items,ups,downs,note:''};
+  S.sessions.push(sess); S.override={date:'',map:{},list:null}; R.newBadges=checkBadges(); save(); R.saved=sess; return sess;
 }
 
 /* =====================================================================
@@ -1486,7 +1677,20 @@ function renderLog(){
   const today=dkey(); const T=trainSessions();
   const ws=weekStart(today); const wk=sessionsInWeek(ws).length;
   // 連続で週目標を達成した週数（今週は達成していれば数える）
-  let streak=0; { let w=ws; if(sessionsInWeek(w).length>=S.profile.days) streak++; w=addDays(w,-7); while(sessionsInWeek(w).length>=S.profile.days){streak++; w=addDays(w,-7); if(streak>520) break;} }
+  const streak=weekStreak();
+  const rw=weekReport(ws), rp=weekReport(addDays(ws,-7));
+  const cmp=(a,b)=>a>b?`<span class="pill ok" style="font-size:10px">先週+${a-b}</span>`:a<b?`<span class="pill warn" style="font-size:10px">先週−${b-a}</span>`:'';
+  const maxSets=Math.max(1,...PAT_ORDER.map(p=>rw.perPat[p])); const zero=PAT_ORDER.filter(p=>rw.perPat[p]===0);
+  const report=`<div class="card tight"><h2>今週のまとめ <span class="sub">${fmtDate(ws)}〜</span></h2>
+    <div class="stat3"><div><b>${rw.n}<span style="font-size:14px;color:var(--dim2)">/${S.profile.days}</span></b><small>回 ${cmp(rw.n,rp.n)}</small></div><div><b>${rw.sets}</b><small>セット ${cmp(rw.sets,rp.sets)}</small></div><div><b>${rw.ups}</b><small>レベルアップ</small></div></div>
+    <div class="mt">${PAT_ORDER.map(p=>`<div class="row" style="gap:8px;padding:2px 0"><span class="tiny" style="width:48px">${PATTERNS[p].name}</span><div class="bar grow"><i style="width:${Math.round(rw.perPat[p]/maxSets*100)}%;background:${PATTERNS[p].color}"></i></div><span class="tiny" style="width:52px;text-align:right">${rw.perPat[p]}セット</span></div>`).join('')}</div>
+    <div class="tiny mt">${rw.ready!=null?`コンディション平均 ${rw.ready.toFixed(1)}/9 ・ `:''}${rw.n===0?'今週はまだ0回。1回やれば流れができる':zero.length?`今週まだ：${zero.map(p=>PATTERNS[p].name).join('・')} → 次回の型で優先されます`:'全パターンをやった週！'}</div></div>`;
+  const badges=`<div class="card tight"><h2>実績 <span class="sub">${Object.keys(S.badges).length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(b=>`<div class="bd ${S.badges[b.id]?'on':''}"><span>${b.emoji}</span><b>${esc(b.name)}</b><small>${S.badges[b.id]?fmtDate(S.badges[b.id]):esc(b.desc)}</small></div>`).join('')}</div></div>`;
+  let testCard='';
+  if(S.tests.length){ const ts=[...S.tests].sort((a,b)=>a.date<b.date?-1:1).slice(-12); const latest=ts[ts.length-1]; let chart='';
+    if(ts.length>=2){ const vals=ts.map(t=>t.score); const mn=Math.min(...vals)-2,mx=Math.max(...vals)+2; const BW=320,BH=110,pl=30,pb=18; const X=i=>pl+i*(BW-pl-8)/(ts.length-1), Y=v=>BH-pb-(v-mn)/(mx-mn)*(BH-pb-8);
+      chart=`<svg class="chart" viewBox="0 0 ${BW} ${BH}"><line class="axis" x1="${pl}" y1="${BH-pb}" x2="${BW-4}" y2="${BH-pb}"/><polyline class="ln" points="${ts.map((t,i)=>`${X(i)},${Y(t.score)}`).join(' ')}"/>${ts.map((t,i)=>`<circle class="pt" cx="${X(i)}" cy="${Y(t.score)}" r="3"/><text x="${X(i)}" y="${Y(t.score)-6}" text-anchor="middle">${t.score}</text>`).join('')}<text x="${X(0)}" y="${BH-4}">${fmtDate(ts[0].date)}</text><text x="${X(ts.length-1)}" y="${BH-4}" text-anchor="end">${fmtDate(latest.date)}</text></svg>`; }
+    testCard=`<div class="card tight"><h2>筋力スコア <span class="sub">チェックテスト</span></h2>${chart}<div class="stat3 mt"><div><b>${latest.push}</b><small>${esc((EX_BY_ID[latest.pushEx]||{}).name||'腕立て')}</small></div><div><b>${latest.squat}</b><small>スクワット</small></div><div><b>${latest.plank}</b><small>プランク秒</small></div></div><div class="tiny mt">スコア ${latest.score}（腕立て×2＋スクワット＋プランク秒÷2）・${fmtDate(latest.date)}</div><button class="btn ghost sm mt" id="testBtn2" style="width:auto;padding:6px 12px">テストをする</button></div>`; }
   const totalSets=T.reduce((a,s)=>a+s.items.reduce((x,i)=>x+i.sets.length,0),0);
   // ヒートマップ 13週
   const start=addDays(ws,-7*12); const byDay={}; S.sessions.forEach(s=>{ byDay[s.date]=Math.max(byDay[s.date]||0,s.kind==='train'?(s.partial?2:3):1); });
@@ -1512,15 +1716,18 @@ function renderLog(){
   const hist=[...S.sessions].sort((a,b)=>a.date<b.date?1:a.date===b.date?(a.id<b.id?1:-1):-1).slice(0,60);
   $('#v-log').innerHTML=`
     <div class="stat3"><div><b>${T.length}</b><small>トレーニング回数</small></div><div><b>${wk}<span style="font-size:14px;color:var(--dim2)">/${S.profile.days}</span></b><small>今週</small></div><div><b>${streak}</b><small>週目標 連続達成</small></div></div>
+    ${report}
     <div class="card tight"><h2>カレンダー <span class="sub">直近13週 ・ 月→日</span></h2>${heat}<div class="tiny mt">濃い緑＝トレーニング／うすい緑＝途中終了／さらにうすい＝ストレッチのみ。合計 ${totalSets} セット</div></div>
     <div class="card tight"><h2>週ごとの回数 <span class="sub">点線＝目標</span></h2>${weekly}</div>
     <div class="card tight"><h2>いまのレベル</h2><div class="lvgrid">${PAT_ORDER.map(pat=>`<div class="lv" data-pat="${pat}" style="--pc:${PATTERNS[pat].color}"><b>${PATTERNS[pat].name}</b><span>${S.levels[pat]}</span><small>${esc(pickEx(pat).name)}</small></div>`).join('')}</div></div>
+    ${testCard}${badges}
     <div class="card tight"><h2>体重 <span class="sub">任意</span></h2>${bodyChart}<div class="row mt"><input type="number" id="kgIn" step="0.1" min="20" max="200" placeholder="kg" inputmode="decimal" style="flex:1"><button class="btn xs" id="kgBtn">今日の体重を記録</button></div></div>
     <div class="card tight"><h2>履歴</h2>${hist.length?`<ul class="hist">${hist.map(s=>`<li data-id="${s.id}"><div class="hd"><b>${fmtDate(s.date)}</b>${s.kind==='stretch'?'<span class="pill info">ストレッチ</span>':`<span class="pill acc">${TEMPLATES[s.tpl]?.emoji||''} ${TEMPLATES[s.tpl]?.name||''}</span>`}${s.partial?'<span class="pill warn">途中</span>':''}${s.mode==='light'?'<span class="pill">軽め</span>':s.mode==='comeback'?'<span class="pill">久しぶり</span>':''}<span class="r">${fmtDur(s.dur)}${s.kind==='train'?' ・ '+s.items.reduce((a,i)=>a+i.sets.length,0)+'セット':''}</span></div>
       <div class="dt">${s.kind==='train'?`<table>${s.items.map(i=>`<tr><td>${esc(EX_BY_ID[i.ex]?.name||i.ex)} <span class="tiny">Lv.${i.lv}</span></td><td>${i.sets.join(' / ')}${unit(EX_BY_ID[i.ex]||{kind:'reps'})} ${({easy:'😎',ok:'🙂',hard:'🥵'})[i.fb]||''}</td></tr>`).join('')}</table>`:''}
       ${s.ups?.length?`<div class="tiny mt">🆙 ${s.ups.map(u=>esc(u.to)).join('、')}</div>`:''}${s.note?`<div class="tiny mt">📝 ${esc(s.note)}</div>`:''}
       <button class="btn ghost sm mt del" data-id="${s.id}" style="width:auto;padding:6px 12px">この記録を削除</button></div></li>`).join('')}</ul>`:'<p class="tiny">まだ記録がありません。最初の1回をやってみよう。</p>'}</div>`;
   $$('#v-log .lv').forEach(b=>b.onclick=()=>openLadder(b.dataset.pat));
+  const tb2=$('#testBtn2'); if(tb2) tb2.onclick=openTest;
   $$('#v-log .hist .hd').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('open'));
   $$('#v-log .del').forEach(b=>b.onclick=e=>{ e.stopPropagation(); confirmBox('記録を削除','この記録を削除します（レベルは変わりません）。','削除する',()=>{ S.sessions=S.sessions.filter(s=>s.id!==b.dataset.id); save(); renderLog(); toast('削除しました'); },true); });
   $('#kgBtn').onclick=()=>{ const v=parseFloat($('#kgIn').value); if(!(v>20&&v<200)){toast('体重を入力してください');return;} S.body=S.body.filter(b=>b.date!==today); S.body.push({date:today,kg:Math.round(v*10)/10}); save(); renderLog(); toast('記録しました'); };
@@ -1548,6 +1755,8 @@ function renderLib(){
       ・A「押す＋しゃがむ」→ B「引く＋片足」→ C「全身」の順番に回ります。曜日は決めません。<br>
       ・道具（椅子／タオル＋ドア／テーブル／鉄棒／ダンベル／チューブ／リュック）の有無で種目を自動で飛ばし、同じ段に道具あり版があればそちらを優先します（設定で切替）。<br>
       ・「メニューを決める」で Lv.○ にまとめて／パターンごとに種目を選べます（今日だけ／次回以降も固定）。<br>
+      ・4週で1サイクル（導入→積み上げ→強化→回復週）。開始前のコンディションが低い日は自動で軽め。痛みを登録した部位は期間中メニューから外れます。<br>
+      ・3回続けて回数が伸びない種目は「停滞」として対策を提案。4週に1回のチェックテストで筋力スコアを記録します。<br>
       ・データはこの端末の中だけに保存されます（サーバーには送りません）。設定から書き出しできます。</div></div>`;
   }
   $('#v-lib').innerHTML=sub+html;
@@ -1560,7 +1769,7 @@ function renderLib(){
    設定
    ===================================================================== */
 function renderSet(){
-  const p=S.profile, st=S.settings;
+  const p=S.profile, st=S.settings; const pw=programWeek();
   const choice=(name,vals,cur)=>`<div class="choice" data-c="${name}">${vals.map(([v,l])=>`<button data-v="${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('')}</div>`;
   $('#v-set').innerHTML=`
     <div class="card tight"><h2>プロフィール</h2>
@@ -1579,10 +1788,17 @@ function renderSet(){
       <label class="f">スタート前のカウント</label>${choice('prep',[[3,'3秒'],[5,'5秒'],[10,'10秒']],st.prep)}
       <div class="row mt"><label class="check grow"><input type="checkbox" id="sndIn" ${st.sound?'checked':''}><div>音（カウントダウン・終了音）</div></label></div>
       <label class="check"><input type="checkbox" id="vibIn" ${st.vib?'checked':''}><div>バイブ<small>iPhoneのSafariでは動きません（iOSの制限）</small></div></label>
+      <label class="check"><input type="checkbox" id="ciIn" ${st.checkin?'checked':''}><div>開始前にコンディションを聞く<small>睡眠・筋肉痛・気分を3タップ。低い日は自動で軽めに</small></div></label>
+      <label class="check"><input type="checkbox" id="tmIn" ${st.tempo?'checked':''}><div>テンポ音<small>回数種目のセット中、「下ろす2秒・上げる1秒」を音で刻む</small></div></label>
       <label class="f">見た目</label>${choice('theme',[['dark','🌙 ダーク'],['light','☀️ ライト']],st.theme)}
     </div>
     <div class="card tight"><h2>レベルを手動で調整</h2><p class="tiny">ふだんは自動で上下しますが、「もっと簡単から始めたい」「前からやってたので上げたい」ときはここで。</p>
       ${PAT_ORDER.map(pat=>`<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><div class="grow"><b style="font-size:14px">${PATTERNS[pat].emoji} ${PATTERNS[pat].name}</b><div class="tiny">${esc(pickEx(pat).name)}</div></div><button class="iconbtn lvm" data-pat="${pat}">−</button><b style="min-width:40px;text-align:center">Lv.${S.levels[pat]}</b><button class="iconbtn lvp" data-pat="${pat}">＋</button></div>`).join('')}
+    </div>
+    <div class="card tight"><h2>プログラム（期分け）</h2><p class="tiny">4週で1サイクル：導入 → 積み上げ → 強化 → 回復（ディロード）。いま <b>第${pw.week}週・${PHASES[pw.phase].name}期</b>（${pw.cycle}周目）。疲れがたまっていると感じたら、早めに回復週にしてOK。</p>
+      <div class="btnrow"><button class="btn sub sm" id="dlOn" ${pw.phase===3?'disabled':''}>今週を回復週にする</button><button class="btn sub sm" id="dlOff" ${pw.phase===3?'':'disabled'}>回復週をやめる</button></div>
+      <div class="btnrow mt"><button class="btn sub sm" id="painBtn">🩹 痛いところを登録</button><button class="btn sub sm" id="testBtn3">📏 チェックテスト</button></div>
+      ${activePain().length?`<div class="tiny mt">登録中：${activePain().map(x=>PAIN_PARTS[x.part].name+'（あと'+(x.days-daysBetween(x.from,dkey()))+'日）').join('、')}</div>`:''}
     </div>
     <div class="card tight"><h2>データ</h2><p class="tiny">すべてこの端末の中に保存されています。機種変更のときは書き出し→読み込みで引っこし。</p>
       <div class="btnrow"><button class="btn sub sm" id="expBtn">書き出し</button><button class="btn sub sm" id="impBtn">読み込み</button></div><input type="file" id="impFile" accept="application/json" style="display:none">
@@ -1598,6 +1814,11 @@ function renderSet(){
   $$('#v-set [data-eq]').forEach(i=>i.onchange=()=>{S.equip[i.dataset.eq]=i.checked;save();renderSet();});
   $('#prefIn').onchange=e=>{S.settings.preferEquip=e.target.checked;save();renderSet();};
   $('#sndIn').onchange=e=>{S.settings.sound=e.target.checked;save();};
+  $('#ciIn').onchange=e=>{S.settings.checkin=e.target.checked;save();};
+  $('#tmIn').onchange=e=>{S.settings.tempo=e.target.checked;save();};
+  $('#dlOn').onclick=()=>{ const ws=weekStart(dkey()); if(!S.program.deload.includes(ws)) S.program.deload.push(ws); S.program.skipDeload=S.program.skipDeload.filter(w=>w!==ws); save(); H.tpl=null; renderSet(); toast('今週を回復週にしました'); };
+  $('#dlOff').onclick=()=>{ const ws=weekStart(dkey()); S.program.deload=S.program.deload.filter(w=>w!==ws); if(!S.program.skipDeload.includes(ws)) S.program.skipDeload.push(ws); save(); H.tpl=null; renderSet(); toast('今週は通常の週にしました'); };
+  $('#painBtn').onclick=openPain; $('#testBtn3').onclick=openTest;
   $('#vibIn').onchange=e=>{S.settings.vib=e.target.checked;save();};
   $$('#v-set .lvm').forEach(b=>b.onclick=()=>{const p=b.dataset.pat; const pv=prevAvail(p,S.levels[p]); if(pv){S.levels[p]=pv.lv;save();renderSet();} else toast('これ以上下げられません');});
   $$('#v-set .lvp').forEach(b=>b.onclick=()=>{const p=b.dataset.pat; const nx=nextAvail(p,S.levels[p]); if(nx){S.levels[p]=nx.lv;save();renderSet();} else { const up=ladder(p).find(e=>e.lv>S.levels[p]); toast(up?`上の段は「${needName(up)}」が必要です（道具にチェック）`:'最高レベルです'); }});
