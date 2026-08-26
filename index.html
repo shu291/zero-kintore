@@ -194,6 +194,20 @@ nav.tabs button[aria-current="true"]{color:var(--acc)}
 .badges .bd span{font-size:24px;display:block;line-height:1.2}
 .badges .bd b{font-size:12px;display:block}
 .badges .bd small{font-size:10px;color:var(--dim2);display:block;line-height:1.3}
+.foods{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.foods .food{background:var(--bg2);border:1.5px solid var(--line);border-radius:12px;padding:8px 4px;font-size:12.5px;font-weight:700;color:var(--fg);line-height:1.3}
+.foods .food small{display:block;color:var(--dim2);font-weight:600;font-size:11px}
+.foods .food:active{border-color:var(--acc)}
+.mirror{width:100%;max-width:360px;margin:8px auto 0;aspect-ratio:16/10;object-fit:cover;border-radius:16px;transform:scaleX(-1);background:#000;display:block;border:1px solid var(--line)}
+.quiz .choice.col button{padding:9px 12px;font-size:13.5px}
+.quiz .choice button[data-ok="1"]{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 16%,transparent)}
+.quiz .choice button[data-ok="0"]{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.avatarbox{display:flex;gap:12px;align-items:center;padding:4px 0 10px;border-bottom:1px dashed var(--line);margin-bottom:10px}
+.avatarbox svg{flex:none}
+.aiout{white-space:pre-wrap;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.6;margin-top:8px}
+.daysel{display:flex;gap:5px}
+.daysel button{flex:1;background:var(--bg2);border:1.5px solid var(--line);border-radius:10px;padding:8px 0;font-weight:800;font-size:13px;color:var(--fg)}
+.daysel button[aria-pressed="true"]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 16%,transparent)}
 .figbig{width:100%;max-width:360px;margin:0 auto;aspect-ratio:16/10;background:var(--bg2);border-radius:16px;border:1px solid var(--line);overflow:hidden}
 
 /* ---------- exec overlay ---------- */
@@ -766,8 +780,12 @@ const TEMPLATES = {
   A:{name:'押す＋しゃがむ',emoji:'🔥',pats:['push','squat','hinge','core','vpush'],warm:['march','arm','hip','sq'],cool:['chest','quad','child','ham']},
   B:{name:'引く＋片足',   emoji:'🌊',pats:['pull','lunge','core','vpush','hinge'],warm:['march','leg','cat','lt'],cool:['ham','glute','chest','child']},
   C:{name:'全身',         emoji:'⚡',pats:['squat','push','pull','hinge','core'],warm:['march','arm','leg','lt'],cool:['quad','ham','glute','chest']},
+  /* 週4回・慣れてきた人向けの上下分割 */
+  U:{name:'上半身',       emoji:'🫸',pats:['push','pull','vpush','core','hinge'],warm:['march','arm','cat','sq'],cool:['chest','child','neck','ham']},
+  L:{name:'下半身',       emoji:'🦵',pats:['squat','hinge','lunge','core','push'],warm:['march','leg','hip','lt'],cool:['quad','ham','glute','child']},
 };
 const TPL_ORDER = ['A','B','C'];
+const TPL_UL = ['U','L'];
 /* 所要時間ごとの「種目数・セット数・準備運動の数・ストレッチの数」 */
 const TIME_PLAN = {
   10:{ex:3,sets:2,warm:1,cool:1},
@@ -948,7 +966,42 @@ const BADGES=[
  {id:'comeback',emoji:'🔁',name:'カムバック',desc:'7日以上あいてから再開した',test:st=>st.comeback>=1},
  {id:'early',emoji:'🌅',name:'朝トレ',desc:'午前中にトレーニング',test:st=>st.morning>=1},
  {id:'allpat',emoji:'🌈',name:'全パターン制覇',desc:'7つのパターンすべてをやった',test:st=>st.pats>=7},
+ {id:'snack10',emoji:'🍪',name:'スナック10回',desc:'スナック筋トレを10回',test:st=>st.snacks>=10},
+ {id:'quiz10',emoji:'🧠',name:'クイズ博士',desc:'休憩クイズに10問正解',test:st=>st.quiz>=10},
 ];
+
+/* ---------- 休憩クイズ（c=正解の番号） ---------- */
+const QUIZ=[
+ {id:'q1',q:'筋肉が「育つ」のは主にいつ？',a:['トレーニングしている最中','休んでいる間','食事をしている最中'],c:1,e:'トレで入った小さなダメージを、休んでいる間に修復して少し強くなる（超回復）'},
+ {id:'q2',q:'初心者の全身トレーニング、週の回数の目安は？',a:['毎日','週2〜3回','月に1回'],c:1,e:'週2〜3回がもっとも効率がいい。毎日やるより続けるほうが大事'},
+ {id:'q3',q:'同じ部位のトレーニング、どれくらいあける？',a:['毎日やってOK','中1日以上','1週間'],c:1,e:'修復に48〜72時間かかる。だからアプリは「昨日やったら今日は休み」'},
+ {id:'q4',q:'1セットは「あと何回できる」ところで止めるのが目安？',a:['0回（限界まで）','あと2回','あと10回'],c:1,e:'限界までやるとフォームが崩れてケガのもと。「あと2回」で止めてOK'},
+ {id:'q5',q:'下ろす（戻す）動きにかける時間は？',a:['一気に','2〜3秒','10秒'],c:1,e:'ゆっくり下ろす動き（エキセントリック）は筋肉への刺激が大きい'},
+ {id:'q6',q:'力を入れる（押す・上がる）ときの呼吸は？',a:['止める','吐く','吸う'],c:1,e:'力を入れるときに吐く。息を止めると血圧が上がってふらつく'},
+ {id:'q7',q:'筋肉痛がない日は、効いていない？',a:['はい','いいえ'],c:1,e:'慣れると筋肉痛は出なくなるが、ちゃんと強くなっている'},
+ {id:'q8',q:'たんぱく質の目安（体重1kgあたり／1日）は？',a:['0.5g','1.2〜1.6g','5g'],c:1,e:'体重60kgなら70〜100g。毎食に肉・魚・卵・大豆・乳製品のどれかを'},
+ {id:'q9',q:'プロテイン（粉）は必須？',a:['必須','食事で足りれば不要'],c:1,e:'食事で足りないときの補助。飲めば筋肉がつくわけではない'},
+ {id:'q10',q:'見た目が変わり始めるのは、始めてからどれくらい？',a:['1週間','8〜12週間','1年'],c:1,e:'最初の2〜4週は神経の適応で回数が伸び、見た目は8〜12週から'},
+ {id:'q11',q:'最初の2〜4週で回数が急に伸びる主な理由は？',a:['筋肉が増えた','神経が筋肉をうまく使えるようになった'],c:1,e:'神経の適応。筋肉が増えるのはそのあと'},
+ {id:'q12',q:'スクワットで、ひざの向きは？',a:['内側に入れる','つま先と同じ向き'],c:1,e:'ひざが内側に入るとひざを痛める。つま先の方向に'},
+ {id:'q13',q:'腕立てで腰が反ると、どうなる？',a:['胸によく効く','腰に負担がかかる'],c:1,e:'狙った筋肉から負荷が逃げて腰に。お尻を締めて一直線に'},
+ {id:'q14',q:'3日連続でトレーニングするのは？',a:['効率的','初心者は避ける'],c:1,e:'回復が追いつかない。アプリも3日連続を止める'},
+ {id:'q15',q:'関節に鋭い痛みが出たら？',a:['がまんして続ける','その日は中止'],c:1,e:'筋肉痛と違い、関節の鋭い痛みはケガのサイン。数日続くなら病院へ'},
+ {id:'q16',q:'回数が伸びなくなったとき、最初に見直すのは？',a:['種目を増やす','睡眠と食事'],c:1,e:'停滞の原因はトレーニングより回復側にあることが多い'},
+ {id:'q17',q:'睡眠時間の目安は？',a:['5時間','7〜9時間'],c:1,e:'成長ホルモンは深い睡眠中に出る。寝不足だとケガも増える'},
+ {id:'q18',q:'「成長期に筋トレすると背が伸びない」は？',a:['本当','俗説'],c:1,e:'科学的根拠はない。正しく行えば骨や関節が丈夫になる'},
+ {id:'q19',q:'1週間さぼってしまったら？',a:['最初からやり直し','軽めで再開すればOK'],c:1,e:'アプリは7日以上あくと回数7割で再開させる。取り返しはつく'},
+ {id:'q20',q:'ジャンプの着地で大事なのは？',a:['ひざを伸ばして着地','ひざを曲げて静かに着地'],c:1,e:'ひざを曲げて衝撃を吸収。ドスンと音がしたら失敗'},
+ {id:'q21',q:'筋トレを始めて体重が増えた。失敗？',a:['はい','筋肉が増えても体重は増える'],c:1,e:'体重だけで判断しない。回数・レベル・服のきつさで見る'},
+ {id:'q22',q:'手首が痛いときの腕立ての工夫は？',a:['手首を強く反らす','こぶしを握って行う'],c:1,e:'ナックルプッシュアップや、手のひらの下にタオルで楽になる'},
+];
+/* ---------- たんぱく質（1回ぶんの目安 g） ---------- */
+const FOODS=[
+ {e:'🥚',n:'卵1個',g:6},{e:'🫘',n:'納豆1パック',g:8},{e:'🥛',n:'牛乳1杯',g:7},{e:'🍶',n:'ヨーグルト1個',g:4},{e:'🧀',n:'チーズ1枚',g:4},{e:'🍞',n:'食パン1枚',g:5},
+ {e:'🍚',n:'ごはん1杯',g:4},{e:'🍗',n:'鶏むね100g',g:22},{e:'🥩',n:'豚・牛肉100g',g:20},{e:'🐟',n:'魚1切れ',g:20},{e:'🥫',n:'さば缶1缶',g:25},{e:'🐟',n:'ツナ缶1缶',g:15},
+ {e:'🍢',n:'豆腐半丁',g:10},{e:'🥤',n:'プロテイン1杯',g:20},{e:'🍜',n:'ラーメン1杯',g:12},{e:'🍙',n:'おにぎり1個',g:4},{e:'🍛',n:'カレー1皿',g:15},{e:'🥗',n:'サラダチキン1個',g:24},
+];
+const AI_SYS='あなたは初心者向けの筋トレコーチ。高校生にもわかる言葉で、短く具体的に、前向きに。医学的な断定はせず、関節の痛みや長引く不調は受診をすすめる。サプリや器具の購入はすすめない。日本語で200字以内。';
 
 /* 今日のひとこと（ホームに順番に出す） */
 const TIPS = [
@@ -992,7 +1045,7 @@ const DEFAULT_STATE=()=>({
   v:1,
   profile:{name:'',goal:'fit',days:3,time:20,onboarded:false,created:dkey()},
   equip:{chair:true,towel:true,table:false,bar:false,db:false,band:false,bag:false},
-  settings:{rest:60,coreRest:45,sound:true,vib:true,theme:'dark',prep:5,hideInstall:false,preferEquip:true,checkin:true,tempo:false},
+  settings:{rest:60,coreRest:45,sound:true,vib:true,theme:'dark',prep:5,hideInstall:false,preferEquip:true,checkin:true,tempo:false,voice:true,mirror:false,split:'auto',remTime:'19:00',remDays:[1,3,5],geminiKey:'',geminiModel:'gemini-2.5-flash-lite'},
   levels:{push:1,vpush:1,pull:1,squat:1,lunge:1,hinge:1,core:1},
   last:{},
   sessions:[],
@@ -1000,6 +1053,7 @@ const DEFAULT_STATE=()=>({
   override:{date:'',map:{},list:null},
   checkins:[], pain:[], tests:[], badges:{},
   program:{deload:[],skipDeload:[]},
+  protein:{}, quiz:{}, aiNotes:{},
 });
 let S=load();
 function load(){ try{const raw=localStorage.getItem(KEY); if(raw) return deepMerge(DEFAULT_STATE(),JSON.parse(raw));}catch(e){console.warn(e);} return DEFAULT_STATE(); }
@@ -1062,6 +1116,7 @@ function plan(){
     if(last){ const gap=ch.gaps[tpl]; reasons.push(`前回は「${TEMPLATES[last.tpl]?.name||'—'}」（${daysSince}日前）。${gap?`「${gap}」があいているので`:'順番どおり'}「${TEMPLATES[tpl].name}」`); }
     else reasons.push('はじめての日。回数よりフォームを覚えるのが目標');
     if(avoid.length) reasons.push(`痛みの登録で ${avoid.map(p=>PATTERNS[p].name).join('・')} を外している`);
+    if(activeOrder()===TPL_UL&&(!last||!TPL_UL.includes(last.tpl))) reasons.push('週4回／9週目以降は「上半身・下半身」の分割に切り替え（設定で全身に戻せます）');
   }
   return {kind,mode,tpl,daysSince,wk,reasons,last,todaySession:main.find(s=>s.date===today),avoid,pw,ci};
 }
@@ -1078,14 +1133,16 @@ function programWeek(){
 /* 型（A/B/C）の選択：あいている部位が多い型を優先。差がなければ順番どおり */
 function chooseTemplate(avoid,last){
   const lastD=patternLastDates(); const today=dkey();
-  const rot=last&&TEMPLATES[last.tpl]?TPL_ORDER[(TPL_ORDER.indexOf(last.tpl)+1)%3]:'A';
+  const order=activeOrder(); const idx=last?order.indexOf(last.tpl):-1; const rot=idx>=0?order[(idx+1)%order.length]:order[0];
   let best=rot,bestScore=-Infinity; const gaps={};
-  TPL_ORDER.forEach(k=>{ const pats=TEMPLATES[k].pats.filter(p=>!avoid.includes(p)).slice(0,4); let sc=0; const g=[];
+  order.forEach(k=>{ const pats=TEMPLATES[k].pats.filter(p=>!avoid.includes(p)).slice(0,4); let sc=0; const g=[];
     pats.forEach(p=>{ const d=lastD[p]?Math.min(14,daysBetween(lastD[p],today)):14; sc+=d; if(lastD[p]&&d>=5) g.push(PATTERNS[p].name); });
     if(k===rot) sc+=0.5; gaps[k]=g.join('・'); if(sc>bestScore){bestScore=sc;best=k;} });
   return {tpl:best,gaps};
 }
 function todayCheckin(){ return (S.checkins||[]).find(c=>c.date===dkey()); }
+/* 使う型のセット：全身A/B/C か 上下分割U/L。auto は週4回設定 or 9週目以降で分割 */
+function activeOrder(){ const sp=S.settings.split||'auto'; if(sp==='full') return TPL_ORDER; if(sp==='ul') return TPL_UL; return (S.profile.days>=4||programWeek().week>=9)?TPL_UL:TPL_ORDER; }
 function weekStreak(){ let ws=weekStart(dkey()); let k=0; if(sessionsInWeek(ws).length>=S.profile.days) k++; ws=addDays(ws,-7); while(sessionsInWeek(ws).length>=S.profile.days&&k<600){ k++; ws=addDays(ws,-7); } return k; }
 function weekReport(ws){
   const ss=sessionsInWeek(ws); const perPat={}; PAT_ORDER.forEach(p=>perPat[p]=0); let sets=0,reps=0,ups=0;
@@ -1103,9 +1160,89 @@ function testDue(){ const k=trainSessions().length; if(!S.tests.length) return k
 function badgeStats(){
   const T=trainSessions(); const best={}; const pats=new Set();
   T.forEach(s=>s.items.forEach(i=>{ pats.add(i.pat); const m=Math.max(0,...i.sets); if(!best[i.ex]||best[i.ex]<m) best[i.ex]=m; }));
-  return {n:T.length,ups:T.reduce((a,s)=>a+(s.ups||[]).length,0),weekStreak:weekStreak(),best,tests:S.tests.length,comeback:T.filter(s=>s.mode==='comeback').length,morning:T.filter(s=>s.t&&new Date(s.t).getHours()<12).length,pats:pats.size};
+  return {n:T.length,ups:T.reduce((a,s)=>a+(s.ups||[]).length,0),weekStreak:weekStreak(),best,tests:S.tests.length,comeback:T.filter(s=>s.mode==='comeback').length,morning:T.filter(s=>s.t&&new Date(s.t).getHours()<12).length,pats:pats.size,snacks:S.sessions.filter(s=>s.kind==='snack').length,quiz:Object.values(S.quiz||{}).filter(q=>q.c).length};
 }
 function checkBadges(){ const st=badgeStats(); const fresh=[]; BADGES.forEach(b=>{ if(S.badges[b.id]) return; try{ if(b.test(st)){ S.badges[b.id]=dkey(); fresh.push(b); } }catch(e){} }); return fresh; }
+/* 音声ガイド（ブラウザ標準の読み上げ。通信不要） */
+function speak(text){ if(!('speechSynthesis' in window)||!S.settings.voice||!S.settings.sound) return; try{ const u=new SpeechSynthesisUtterance(text); u.lang='ja-JP'; u.rate=1.05; const v=speechSynthesis.getVoices().find(x=>x.lang&&x.lang.replace('_','-').startsWith('ja')); if(v) u.voice=v; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
+/* 鏡モード（前カメラを左右反転で表示。写真は保存しない） */
+async function mirrorStart(){ try{ if(!R.stream) R.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); R.mirror=true; S.settings.mirror=true; save(); renderExec(); }catch(e){ R.mirror=false; toast('カメラを使えませんでした（許可を確認）'); } }
+function mirrorStop(){ if(R.stream){ try{ R.stream.getTracks().forEach(t=>t.stop()); }catch(e){} R.stream=null; } R.mirror=false; }
+function attachMirror(){ const v=$('#mirrorV'); if(v&&R.stream&&v.srcObject!==R.stream){ v.srcObject=R.stream; v.play().catch(()=>{}); } }
+const mirrorBox=()=>R.mirror?`<video id="mirrorV" class="mirror" autoplay playsinline muted></video><div class="tiny center">🪞 鏡モード：お手本と自分の形を見くらべる</div>`:'';
+const mirrorBtn=()=>('mediaDevices' in navigator)?`<button class="iconbtn" id="mirrorBtn">${R.mirror?'🪞 鏡 OFF':'🪞 鏡で自分を見る'}</button>`:'';
+/* じぶん人形：レベルに応じて腕・脚・体幹が太くなる */
+function rankName(total){ return total<=9?'たまご':total<=16?'ひよこ':total<=24?'修行中':total<=32?'鍛えられた体':total<=40?'アスリート':'マスター'; }
+function avatarSVG(size=96){
+  const L=S.levels; const arm=(L.push+L.pull+L.vpush)/3, leg=(L.squat+L.lunge+L.hinge)/3, core=L.core;
+  const aw=3+arm*0.9, lw=3.5+leg*0.8, tw=5+core*0.7, sh=13+arm*1.5, ch=6+L.push*0.9;
+  return `<svg viewBox="0 0 100 130" style="width:${size}px;height:${Math.round(size*1.3)}px"><g stroke="var(--fg)" stroke-linecap="round" fill="none">
+    <line x1="50" y1="36" x2="50" y2="78" stroke-width="${tw}"/><path d="M${50-sh} 40 Q50 ${40+ch} ${50+sh} 40" stroke-width="${aw*0.7}"/>
+    <line x1="${50-sh}" y1="40" x2="${50-sh-5}" y2="58" stroke-width="${aw}"/><line x1="${50-sh-5}" y1="58" x2="${50-sh-9}" y2="76" stroke-width="${aw*0.85}"/>
+    <line x1="${50+sh}" y1="40" x2="${50+sh+5}" y2="58" stroke-width="${aw}"/><line x1="${50+sh+5}" y1="58" x2="${50+sh+9}" y2="76" stroke-width="${aw*0.85}"/>
+    <line x1="43" y1="78" x2="40" y2="100" stroke-width="${lw}"/><line x1="40" y1="100" x2="39" y2="120" stroke-width="${lw*0.85}"/>
+    <line x1="57" y1="78" x2="60" y2="100" stroke-width="${lw}"/><line x1="60" y1="100" x2="61" y2="120" stroke-width="${lw*0.85}"/>
+    </g><circle cx="50" cy="20" r="11" fill="var(--fg)"/><circle cx="46" cy="18" r="1.6" fill="var(--bg2)"/><circle cx="54" cy="18" r="1.6" fill="var(--bg2)"/><path d="M45 24 q5 4 10 0" stroke="var(--bg2)" stroke-width="1.5" fill="none"/></svg>`;
+}
+/* スナック筋トレ：休みの日の1〜2分。1種目1セットだけ */
+function snackOffers(){ const seed=parseKey(dkey()).getDate(); const pats=['squat','core','push','hinge','lunge','pull']; return [0,1,2].map(i=>{ const pt=pats[(seed+i*2)%pats.length]; const ex=pickEx(pt,Math.max(1,S.levels[pt]-1)); return {pat:pt,ex,target:ex.range[0]}; }); }
+function startSnack(o){ const menu={tpl:null,mins:2,mode:'snack',warm:[],main:[{pat:o.pat,ex:o.ex,sets:1,target:o.target}],cool:[]}; menu.est=estimate(menu); beginRun(menu,'snack'); }
+/* 休憩クイズ */
+function pickQuiz(){ const done=S.quiz||{}; const pool=QUIZ.filter(q=>!done[q.id]); const list=pool.length?pool:QUIZ; return list[Math.floor(Math.random()*list.length)]; }
+function quizHTML(q){ return `<div class="card tight quiz" data-q="${q.id}"><b style="font-size:14px">❓ 休憩クイズ</b><div style="font-size:14px;margin:4px 0 8px">${esc(q.q)}</div><div class="choice col">${q.a.map((a,i)=>`<button data-ans="${i}">${esc(a)}</button>`).join('')}</div><div class="tiny mt" id="qExp"></div></div>`; }
+function bindQuiz(q){ $$('#execBody .quiz [data-ans]').forEach(b=>b.onclick=()=>{ if($('#qExp').textContent) return; const i=+b.dataset.ans; const ok=i===q.c; $$('#execBody .quiz [data-ans]').forEach(x=>{ if(+x.dataset.ans===q.c) x.dataset.ok='1'; else if(x===b) x.dataset.ok='0'; }); $('#qExp').innerHTML=`${ok?'⭕ 正解！':'❌ 残念。正解は「'+esc(q.a[q.c])+'」'} ${esc(q.e)}`; S.quiz=S.quiz||{}; S.quiz[q.id]={c:ok,d:dkey()}; save(); if(ok) beep(1320,.15,.2); }); }
+/* 画像でシェア（Canvas → 共有 or 保存） */
+async function shareCard(kind){
+  const c=document.createElement('canvas'); c.width=1080; c.height=1350; const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,1080,1350); g.addColorStop(0,'#ff8a3d'); g.addColorStop(1,'#ff5470'); x.fillStyle=g; x.fillRect(0,0,1080,1350);
+  x.fillStyle='rgba(15,17,23,.9)'; if(x.roundRect){ x.beginPath(); x.roundRect(60,60,960,1230,48); x.fill(); } else x.fillRect(60,60,960,1230);
+  const F='-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif'; x.fillStyle='#fff'; x.textBaseline='top';
+  x.font=`900 54px ${F}`; x.fillText('💪 ゼロから筋トレ',110,120);
+  const lines=[]; const today=dkey();
+  if(kind==='week'){ const ws=weekStart(today); const r=weekReport(ws);
+    lines.push(['sub',`${fmtDate(ws)} 〜 ${fmtDate(addDays(ws,6))} の週`],['big',`${r.n}回 / 目標${S.profile.days}回`],['line',`${r.sets}セット ・ 合計${r.reps}回`],['line',`レベルアップ ${r.ups}回 ・ 週目標 連続${weekStreak()}週`],['gap','']);
+    PAT_ORDER.forEach(pt=>lines.push(['line',`${PATTERNS[pt].name}  Lv.${S.levels[pt]}  ${'■'.repeat(Math.min(10,r.perPat[pt]))}${r.perPat[pt]?' '+r.perPat[pt]+'セット':''}`]));
+  } else { const s=R.saved||[...S.sessions].reverse().find(v=>v.kind==='train'); if(!s){toast('記録がありません');return;}
+    const sets=s.items.reduce((a,i)=>a+i.sets.length,0), reps=s.items.reduce((a,i)=>a+i.sets.reduce((p,q)=>p+q,0),0);
+    lines.push(['sub',`${fmtDate(s.date)} ・ ${TEMPLATES[s.tpl]?TEMPLATES[s.tpl].name:'スナック'}`],['big',`${Math.max(1,Math.round(s.dur/60))}分 ・ ${sets}セット ・ ${reps}回`],['gap','']);
+    s.items.forEach(i=>lines.push(['line',`${EX_BY_ID[i.ex]?EX_BY_ID[i.ex].name:i.ex}   ${i.sets.join(' / ')}${unit(EX_BY_ID[i.ex]||{kind:'reps'})}`]));
+    (s.ups||[]).forEach(u=>lines.push(['ok',`🆙 ${PATTERNS[u.pat].name}がレベルアップ → ${u.to}`]));
+  }
+  const total=PAT_ORDER.reduce((a,pt)=>a+S.levels[pt],0); lines.push(['gap',''],['line',`じぶん人形：${rankName(total)}（筋肉ポイント ${total}）`]);
+  let y=210; lines.forEach(([t,txt])=>{ if(t==='gap'){y+=24;return;} x.font= t==='big'?`900 64px ${F}`:t==='sub'?`700 34px ${F}`:`600 36px ${F}`; x.fillStyle=t==='ok'?'#38d996':t==='sub'?'#aab3cf':'#fff'; x.fillText(txt,110,y); y+= t==='big'?92:54; });
+  x.font=`700 30px ${F}`; x.fillStyle='#aab3cf'; x.fillText('shu291.github.io/zero-kintore',110,1220);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png')); const file=new File([blob],'zero-kintore.png',{type:'image/png'});
+  // スマホだけ共有シートを出す（PCはそのまま保存。ヘッドレス環境で share が固まる事故も防ぐ）
+  const mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.userAgent));
+  if(mobile&&navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'ゼロから筋トレ'}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zero-kintore.png'; document.body.appendChild(a); a.click(); a.remove(); toast('画像を保存しました');
+}
+/* リマインダー：カレンダーに繰り返し予定を入れる（.ics）。通知はカレンダーアプリが出してくれる */
+function makeICS(){
+  const days=S.settings.remDays||[]; if(!days.length){ toast('曜日を1つ以上えらんでください'); return; }
+  const [hh,mm]=(S.settings.remTime||'19:00').split(':').map(Number); const map=['SU','MO','TU','WE','TH','FR','SA']; const now=new Date();
+  let d=new Date(now.getFullYear(),now.getMonth(),now.getDate(),hh,mm); for(let i=0;i<8;i++){ if(days.includes(d.getDay())&&d>now) break; d.setDate(d.getDate()+1); }
+  const f=x=>`${x.getFullYear()}${pad(x.getMonth()+1)}${pad(x.getDate())}T${pad(x.getHours())}${pad(x.getMinutes())}00`;
+  const ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//zero-kintore//JP','BEGIN:VEVENT',`UID:zerokintore-${Date.now()}@local`,`DTSTAMP:${f(new Date())}`,`DTSTART:${f(d)}`,'DURATION:PT20M',`RRULE:FREQ=WEEKLY;BYDAY=${days.map(x=>map[x]).join(',')}`,'SUMMARY:筋トレ（ゼロから筋トレを開く）','DESCRIPTION:https://shu291.github.io/zero-kintore/','URL:https://shu291.github.io/zero-kintore/','BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:筋トレの時間','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zero-kintore-reminder.ics'; document.body.appendChild(a); a.click(); a.remove();
+  toast('開いたら「カレンダーに追加」してください');
+}
+/* AIコーチ（任意・Gemini 無料枠。キーは端末内だけ） */
+async function askGemini(prompt){
+  const key=(S.settings.geminiKey||'').trim(); if(!key) throw new Error('nokey');
+  const model=S.settings.geminiModel||'gemini-2.5-flash-lite';
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:AI_SYS}]},contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.7,maxOutputTokens:800}})});
+  if(!res.ok){ const t=await res.text(); throw new Error(res.status===429?'無料枠の上限。少し待ってから':res.status===400||res.status===403?'APIキーが正しくないようです':'エラー '+res.status+' '+t.slice(0,80)); }
+  const j=await res.json(); const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim(); if(!txt) throw new Error('返事が空でした'); return txt;
+}
+async function runAI(btn,outEl,prompt,cacheKey){
+  if(!(S.settings.geminiKey||'').trim()){ outEl.innerHTML='<div class="aiout">設定 → 「AIコーチ」に Gemini の APIキー（無料）を入れると使えます。</div>'; return; }
+  btn.disabled=true; outEl.innerHTML='<div class="aiout pulse">🤖 考え中…</div>';
+  try{ const t=await askGemini(prompt); outEl.innerHTML=`<div class="aiout">🤖 ${esc(t)}</div>`; if(cacheKey){ S.aiNotes=S.aiNotes||{}; S.aiNotes[cacheKey]=t; save(); } }
+  catch(e){ outEl.innerHTML=`<div class="aiout" style="border-color:var(--bad)">${esc(e.message==='nokey'?'APIキーを設定してください':e.message)}</div>`; }
+  btn.disabled=false;
+}
+function aiContext(){ const r=weekReport(weekStart(dkey())); const lv=PAT_ORDER.map(pt=>`${PATTERNS[pt].name}Lv${S.levels[pt]}`).join('・'); const pl=plateaus().map(x=>x.ex.name+'('+x.reps.join('→')+')').join('、'); const ci=(S.checkins||[]).slice(-5).map(c=>c.score).join(','); return `ユーザー：筋トレ初心者、目標「${GOALS[S.profile.goal]?.name||''}」、週${S.profile.days}回・1回${S.profile.time}分。現在レベル：${lv}。今週：${r.n}回/${S.profile.days}回、${r.sets}セット、レベルアップ${r.ups}回。停滞中の種目：${pl||'なし'}。最近のコンディション(9点満点)：${ci||'未記録'}。痛みの登録：${activePain().map(x=>PAIN_PARTS[x.part].name).join('、')||'なし'}。`; }
 /* テンポ音：低い音で下ろしはじめ（2秒）→ 高い音で上げる（1秒） */
 let tempoT=null;
 function tempoStart(){ tempoStop(); const cyc=()=>{ beep(440,.12,.2); setTimeout(()=>beep(880,.12,.2),2000); }; cyc(); tempoT=setInterval(cyc,3000); }
@@ -1320,7 +1457,7 @@ function renderHome(){
       <div class="tiny" style="margin-top:6px">${(()=>{const g=[...new Set(menu.main.flatMap(m=>needs(m.ex)))]; return g.length?'使う道具：'+g.map(k=>EQUIP[k].emoji+esc(EQUIP[k].name.split('・')[0])).join('、'):'道具なしでできるメニュー';})()}${menu.custom?' ・ <span class="pill acc">自分で決めたメニュー</span>':''}</div>
       <button class="btn sub sm mt" id="menuBtn">🧩 メニューを決める（レベル別・種目別）</button>
       <button class="btn mt" id="startBtn">トレーニングを始める</button>
-      <div class="row mt" style="justify-content:center;gap:6px">${TPL_ORDER.map(k=>`<button class="iconbtn tplbtn" data-tpl="${k}" style="${H.tpl===k?'border-color:var(--acc);color:var(--acc)':''}">${TEMPLATES[k].emoji} ${TEMPLATES[k].name}</button>`).join('')}</div>
+      <div class="row mt" style="justify-content:center;gap:6px">${activeOrder().map(k=>`<button class="iconbtn tplbtn" data-tpl="${k}" style="${H.tpl===k?'border-color:var(--acc);color:var(--acc)':''}">${TEMPLATES[k].emoji} ${TEMPLATES[k].name}</button>`).join('')}</div>
     </div>`;
   }else if(p.kind==='rest'){
     hero=`<div class="card hero rest">
@@ -1356,8 +1493,12 @@ function renderHome(){
   const plateauCard=pl.length?`<div class="card tight"><h2>🧱 停滞かも</h2>${pl.map(x=>`<div style="padding:5px 0;border-top:1px dashed var(--line)"><b style="font-size:14px">${esc(x.ex.name)}</b><div class="tiny">直近3回：${x.reps.join(' → ')}${unit(x.ex)}。伸びていません</div></div>`).join('')}<div class="tiny mt">まず睡眠・食事を見直す。そのうえで対策を1つ：</div><div class="btnrow mt"><button class="btn sub sm" id="plTempo">🎵 テンポ音で丁寧に</button><button class="btn sub sm" id="plDown">一段やさしく（今日）</button><button class="btn sub sm" id="plDeload">今週を回復週に</button></div></div>`:'';
   const td=testDue();
   const testCard=td?`<div class="card tight"><h2>📏 チェックテスト <span class="sub">4週に1回</span></h2><p class="muted" style="margin:0 0 8px">${S.tests.length?`前回から${td}日。`:'4回以上トレーニングしたので、'}いまの力を測って「筋力スコア」を残そう（約10分・全力で1回ずつ）。</p><button class="btn sub sm" id="testBtn">テストをする</button></div>`:'';
-  $('#v-home').innerHTML=hero+recov+painCard+plateauCard+testCard+`
-    <div class="card tight"><h2>いまのレベル <span class="sub">タップで詳細</span></h2><div class="lvgrid">${PAT_ORDER.map(pat=>`<div class="lv" data-pat="${pat}" style="--pc:${PATTERNS[pat].color}"><b>${PATTERNS[pat].name}</b><span>${S.levels[pat]}</span><small>/ ${maxLv(pat)}</small></div>`).join('')}</div></div>
+  const offers=(p.kind==='rest'||p.kind==='done')?snackOffers():[]; const todaySnacks=S.sessions.filter(s=>s.kind==='snack'&&s.date===today).length;
+  const snackCard=offers.length?`<div class="card tight"><h2>🍪 スナック筋トレ <span class="sub">1〜2分 ・ 今日 ${todaySnacks}回</span></h2><p class="tiny" style="margin:0 0 8px">休みの日でも「ちょい足し」は回復のじゃまをしない。勉強の合間に1つだけ。</p><div class="btnrow">${offers.map((o,i)=>`<button class="btn sub sm snack" data-i="${i}">${esc(o.ex.name)}<br><small style="color:var(--dim2)">1セット ${o.target}${unit(o.ex)}</small></button>`).join('')}</div></div>`:'';
+  $('#v-home').innerHTML=hero+snackCard+recov+painCard+plateauCard+testCard+`
+    <div class="card tight"><h2>いまのレベル <span class="sub">タップで詳細</span></h2>
+    ${(()=>{ const total=PAT_ORDER.reduce((a,pt)=>a+S.levels[pt],0); const L=S.levels; return `<div class="avatarbox">${avatarSVG(84)}<div class="grow"><b style="font-size:16px">じぶん人形：${rankName(total)}</b><div class="tiny">筋肉ポイント ${total}/45 ・ 腕 ${((L.push+L.pull+L.vpush)/3).toFixed(1)} ／ 脚 ${((L.squat+L.lunge+L.hinge)/3).toFixed(1)} ／ 体幹 ${L.core}</div><div class="tiny">レベルが上がるほど、腕・脚・体幹が太くなる</div></div></div>`; })()}
+    <div class="lvgrid">${PAT_ORDER.map(pat=>`<div class="lv" data-pat="${pat}" style="--pc:${PATTERNS[pat].color}"><b>${PATTERNS[pat].name}</b><span>${S.levels[pat]}</span><small>/ ${maxLv(pat)}</small></div>`).join('')}</div></div>
     ${guide}
     <div class="card tight"><div class="tipbox">💡 <b>今日のひとこと</b><br>${esc(TIPS[tipIdx])}</div></div>
     ${install}`;
@@ -1375,6 +1516,7 @@ function renderHome(){
   const pd=$('#plDown'); if(pd) pd.onclick=()=>{ pl.forEach(x=>{ const pv=prevAvail(x.ex.pat,x.ex.lv); if(pv) todayOverride().map[x.ex.pat]=pv.id; }); save(); renderHome(); toast('今日は一段やさしい種目にしました'); };
   const pdl=$('#plDeload'); if(pdl) pdl.onclick=()=>{ const ws=weekStart(dkey()); if(!S.program.deload.includes(ws)) S.program.deload.push(ws); S.program.skipDeload=S.program.skipDeload.filter(w=>w!==ws); save(); H.tpl=null; renderHome(); toast('今週を回復週にしました'); };
   const tb=$('#testBtn'); if(tb) tb.onclick=openTest;
+  $$('#v-home .snack').forEach(b=>b.onclick=()=>startSnack(offers[+b.dataset.i]));
   const st=$('#stretchBtn'); if(st) st.onclick=()=>startStretch();
   const fb=$('#forceBtn'); if(fb) fb.onclick=()=>{ H.planKind='train'; H.mode='light'; H.tpl=p.tpl; H.mins=S.profile.time; startWorkout(buildMenu(H.tpl,H.mins,'light')); };
   const lb=$('#logBtn'); if(lb) lb.onclick=()=>$$('nav.tabs button')[1].click();
@@ -1441,8 +1583,10 @@ function openExDetail(id){
     <div class="row wrap mt" style="gap:8px"><span class="pill ok">楽にする: ${esc(e.easy)}</span><span class="pill warn">きつくする: ${esc(e.hard)}</span></div>
     ${last?`<p class="tiny mt">前回 ${fmtDate(last.date)}：${last.reps.join(' / ')}${unit(e)}（${({easy:'楽すぎ',ok:'ちょうど',hard:'きつすぎ'})[last.fb]||'—'}）</p>`:''}
     ${(()=>{ const hs=trainSessions().sort((a,b)=>a.date<b.date?-1:1).flatMap(s=>s.items.filter(i=>i.ex===e.id&&i.sets.length).map(i=>({d:s.date,v:Math.min(...i.sets)}))).slice(-12); if(hs.length<2) return ''; const vals=hs.map(h=>h.v); const mn=Math.min(...vals,e.range[0])-1, mx=Math.max(...vals,e.range[1])+1; const BW=320,BH=90,pl=26,pb=16; const X=i=>pl+i*(BW-pl-8)/(hs.length-1), Y=v=>BH-pb-(v-mn)/(mx-mn)*(BH-pb-8); return `<div class="mt"><b style="font-size:14px">回数の推移 <span class="tiny">（各回の最小セット）</span></b><svg class="chart" viewBox="0 0 ${BW} ${BH}"><line class="goal" x1="${pl}" y1="${Y(e.range[1])}" x2="${BW-4}" y2="${Y(e.range[1])}"/><text x="2" y="${Y(e.range[1])+4}">上限</text><polyline class="ln" points="${hs.map((h,i)=>`${X(i)},${Y(h.v)}`).join(' ')}"/>${hs.map((h,i)=>`<circle class="pt" cx="${X(i)}" cy="${Y(h.v)}" r="3"/>`).join('')}<text x="${X(0)}" y="${BH-3}">${fmtDate(hs[0].d)}</text><text x="${X(hs.length-1)}" y="${BH-3}" text-anchor="end">${fmtDate(hs[hs.length-1].d)}</text></svg></div>`; })()}
-    ${hasEquip(e.need)&&S.levels[pat]!==e.lv?`<button class="btn sub mt" id="setLv">この種目を「いまのレベル」にする</button>`:''}`);
+    ${hasEquip(e.need)&&S.levels[pat]!==e.lv?`<button class="btn sub mt" id="setLv">この種目を「いまのレベル」にする</button>`:''}
+    <div class="mt"><input type="text" id="aiQ" placeholder="🤖 この種目について質問（例: 手首が痛くなる）" maxlength="120"><button class="btn sub sm mt" id="aiAsk">AIコーチに聞く</button><div id="aiAns"></div></div>`);
   const b=$('#setLv'); if(b) b.onclick=()=>{ S.levels[pat]=e.lv; save(); closeModal(); render(); toast(`${PATTERNS[pat].name}をLv.${e.lv}にしました`); };
+  $('#aiAsk').onclick=()=>{ const q=$('#aiQ').value.trim(); if(!q){toast('質問を入力してください');return;} runAI($('#aiAsk'),$('#aiAns'),`種目「${e.name}」（${PATTERNS[pat].name}、Lv.${e.lv}）についての質問：${q}\nやり方：${e.how.join('／')}\nよくあるミス：${e.miss.join('／')}\n${aiContext()}`); };
 }
 
 /* =====================================================================
@@ -1458,7 +1602,8 @@ function startStretch(){
 }
 function startWorkout(menu){ if(!menu.main.length){toast('種目がありません。設定で道具を確認してください');return;} beginRun(menu,'train'); }
 function beginRun(menu,kind){
-  R.menu=menu; R.kind=kind; R.stages=[]; R.saved=null; R.newBadges=[];
+  R.menu=menu; R.kind=kind; R.stages=[]; R.saved=null; R.newBadges=[]; R.spoken=null; R.quiz=null; R.mirror=false;
+  if(S.settings.mirror&&kind!=='stretch') setTimeout(mirrorStart,300);
   menu.warm.forEach(w=>R.stages.push({type:'timed',item:w,group:'warm',secs:w.secs}));
   menu.main.forEach(m=>R.stages.push({type:'ex',pat:m.pat,ex:m.ex,sets:m.sets,target:m.target,results:[],fb:null}));
   menu.cool.forEach(c=>R.stages.push({type:'timed',item:c,group:'cool',secs:c.secs}));
@@ -1469,7 +1614,7 @@ function beginRun(menu,kind){
   $('#execSound').textContent=S.settings.sound?'🔊':'🔇';
   renderExec();
 }
-function endRun(){ R.on=false; clearInterval(tickT); R.timer=null; tempoStop(); $('#exec').classList.remove('on'); document.body.style.overflow=''; wakeLock(false); render(); }
+function endRun(){ R.on=false; clearInterval(tickT); R.timer=null; tempoStop(); mirrorStop(); try{speechSynthesis.cancel();}catch(e){} $('#exec').classList.remove('on'); document.body.style.overflow=''; wakeLock(false); render(); }
 $('#execClose').onclick=()=>{
   const anyDone=R.stages.some(s=>s.type==='ex'&&s.results.length);
   if(R.stages[R.si].type==='done'){ endRun(); return; }
@@ -1495,8 +1640,8 @@ function tick(){
 }
 function onTimerEnd(kind){
   const st=stage();
-  if(kind==='prep'){ R.phase='run'; setTimer('run',currentSecs()); beep(1320,.2,.3); vib(80); renderExec(); return; }
-  if(kind==='switch'){ R.phase='run'; setTimer('run',currentSecs()); beep(1320,.2,.3); vib(80); renderExec(); return; }
+  if(kind==='prep'){ R.phase='run'; setTimer('run',currentSecs()); beep(1320,.2,.3); vib(80); speak('スタート'); renderExec(); return; }
+  if(kind==='switch'){ R.phase='run'; setTimer('run',currentSecs()); beep(1320,.2,.3); vib(80); speak('反対側、スタート'); renderExec(); return; }
   if(kind==='run'){
     const sides=st.type==='timed'?st.item.sides:st.ex.sides;
     if(sides&&R.side===0){ R.side=1; R.phase='switch'; setTimer('switch',S.settings.prep); beep(660,.15); vib([60,60,60]); renderExec(); return; }
@@ -1505,7 +1650,7 @@ function onTimerEnd(kind){
     // 時間種目のセット完了
     st.results.push(currentSecs()); afterSet(); return;
   }
-  if(kind==='rest'){ chime(); vib([100,50,100]); startSet(); return; }
+  if(kind==='rest'){ chime(); vib([100,50,100]); speak(`休憩おわり。セット${R.set}`); startSet(); return; }
 }
 function currentSecs(){ const st=stage(); return st.type==='timed'?st.secs:st.target; }
 
@@ -1524,7 +1669,7 @@ function startSet(){
 }
 function afterSet(){
   const st=stage();
-  if(R.set<st.sets){ R.set++; R.phase='rest'; setTimer('rest',restFor(st.ex)); renderExec(); }
+  if(R.set<st.sets){ R.set++; R.phase='rest'; setTimer('rest',restFor(st.ex)); R.quiz=pickQuiz(); speak(`セット${R.set-1}おわり。${restFor(st.ex)}秒休憩`); renderExec(); }
   else { R.phase='fb'; R.timer=null; renderExec(); }
 }
 function nextStage(){
@@ -1548,6 +1693,18 @@ function nextBox(){
   return `<div class="nextbox"><div class="fig">${figSVG(it.fig)}</div><div><b>次：${esc(it.name)}</b><small>${sub}</small></div></div>`;
 }
 function renderExec(){
+  renderExecInner();
+  const mb=$('#mirrorBtn'); if(mb) mb.onclick=()=>{ if(R.mirror){ mirrorStop(); S.settings.mirror=false; save(); renderExec(); } else mirrorStart(); };
+  setTimeout(attachMirror,0);
+  const key=`${R.si}:${R.phase}:${R.set}:${R.side}`;
+  if(R.spoken!==key){ R.spoken=key; const st=stage();
+    if(st.type==='ex'&&R.phase==='intro') speak(`次は、${st.ex.name}。${st.sets}セット、目標${st.target}${unit(st.ex)}${st.ex.sides?'、左右それぞれ':''}`);
+    else if(st.type==='timed'&&R.phase==='intro') speak(`${st.item.name}、${st.secs}秒${st.item.sides?'、左右':''}`);
+    else if(st.type==='ex'&&R.phase==='fb') speak('この種目はどうだった？');
+    else if(st.type==='done') speak(R.kind==='train'?'おつかれさま。今日の分は終わり。':'完了。');
+  }
+}
+function renderExecInner(){
   const st=stage(); const body=$('#execBody'), foot=$('#execFoot');
   if(!(st.type==='ex'&&R.phase==='work')) tempoStop();
   $('#execBar').style.width=progressPct()+'%';
@@ -1556,7 +1713,7 @@ function renderExec(){
   if(st.type==='timed'){
     const it=st.item; const sideLbl=it.sides?`<span class="sidebadge">${R.side===0?'左':'右'}</span>`:'';
     if(R.phase==='intro'){
-      body.innerHTML=`<div class="stagename">${st.group==='warm'?'WARM-UP':'COOL-DOWN'}</div><div class="exname">${esc(it.name)}<small>${st.secs}秒${it.sides?' × 左右':''}</small></div><div class="figbig fig">${figSVG(it.fig)}</div>${figCap(it.fig)}${cueList(it.how)}<p class="tiny mt">${st.group==='warm'?'ケガを防いで、本番でちゃんと力が出るようにする時間。がんばらなくてOK。':'使った筋肉をゆるめる時間。痛気持ちいいところで止めて、深呼吸。'}</p>`;
+      body.innerHTML=`<div class="stagename">${st.group==='warm'?'WARM-UP':'COOL-DOWN'}</div><div class="exname">${esc(it.name)}<small>${st.secs}秒${it.sides?' × 左右':''}</small></div><div class="figbig fig">${figSVG(it.fig)}</div>${figCap(it.fig)}${mirrorBox()}<div class="center mt">${mirrorBtn()}</div>${cueList(it.how)}<p class="tiny mt">${st.group==='warm'?'ケガを防いで、本番でちゃんと力が出るようにする時間。がんばらなくてOK。':'使った筋肉をゆるめる時間。痛気持ちいいところで止めて、深呼吸。'}</p>`;
       foot.innerHTML=`<div class="btnrow"><button class="btn ghost" id="skipBtn">とばす</button><button class="btn" id="goBtn">スタート</button></div>`;
       $('#goBtn').onclick=()=>{ audioInit(); R.phase='prep'; setTimer('prep',S.settings.prep); renderExec(); };
       $('#skipBtn').onclick=()=>{ R.si++; const nx=stage(); R.phase='intro'; R.timer=null; if(nx.type==='done') finishSession(false); renderExec(); };
@@ -1577,7 +1734,7 @@ function renderExec(){
     const head=`<div class="stagename">${PATTERNS[st.pat].name.toUpperCase()} ・ Lv.${ex.lv}</div><div class="exname">${esc(ex.name)}<small>セット ${R.set}/${st.sets}</small></div>`;
     const sideLbl=ex.sides?`<span class="sidebadge">${R.side===0?'左':'右'}</span>`:'';
     if(R.phase==='intro'){
-      body.innerHTML=`${head}${dots}<div class="figbig fig">${figSVG(ex.fig)}</div>${figCap(ex.fig)}
+      body.innerHTML=`${head}${dots}<div class="figbig fig">${figSVG(ex.fig)}</div>${figCap(ex.fig)}${mirrorBox()}<div class="center mt">${mirrorBtn()}</div>
         <div class="target"><b>${st.sets} × ${st.target}<span style="font-size:20px">${unit(ex)}</span></b><small>${ex.sides?'左右それぞれ ・ ':''}目標（前回の記録から自動で決めています）</small></div>
         <b style="font-size:14px">やり方</b>${cueList(ex.how)}<b style="font-size:14px">よくあるミス</b>${cueList(ex.miss,'miss')}
         <p class="tiny mt">楽すぎたら：${esc(ex.easy)} ／ きつすぎたら：${esc(ex.hard)}</p>`;
@@ -1589,7 +1746,7 @@ function renderExec(){
         <div class="target"><small>目標</small><b>${st.target}<span style="font-size:20px">回</span></b><small>${ex.sides?'左右それぞれ ・ ':''}下ろすときは2〜3秒かけて</small></div>
         <div class="stepper"><button id="repM">−</button><div><b id="repV">${R.reps}</b><small>できた回数</small></div><button id="repP">＋</button></div>
         <p class="tiny center">${esc(ex.how[1]||ex.how[0])}</p>
-        <div class="center"><button class="iconbtn" id="tempoBtn">${S.settings.tempo?'🎵 テンポ音 ON':'🎵 テンポ音 OFF'}</button><div class="tiny">低い音で下ろしはじめ（2秒）→ 高い音で上げる（1秒）</div></div>`;
+        <div class="center"><button class="iconbtn" id="tempoBtn">${S.settings.tempo?'🎵 テンポ音 ON':'🎵 テンポ音 OFF'}</button> ${mirrorBtn()}<div class="tiny">低い音で下ろしはじめ（2秒）→ 高い音で上げる（1秒）</div></div>${mirrorBox()}`;
       if(S.settings.tempo) tempoStart();
       $('#tempoBtn').onclick=()=>{ S.settings.tempo=!S.settings.tempo; save(); if(S.settings.tempo){ audioInit(); tempoStart(); } else tempoStop(); $('#tempoBtn').textContent=S.settings.tempo?'🎵 テンポ音 ON':'🎵 テンポ音 OFF'; };
       foot.innerHTML=`<div class="btnrow"><button class="btn ghost" id="stopBtn">ここでやめる</button><button class="btn ok" id="doneBtn">できた ✓</button></div>`;
@@ -1610,7 +1767,8 @@ function renderExec(){
       const tip=ex.miss[Math.floor(Math.random()*ex.miss.length)];
       body.innerHTML=`${head}${dots}<div class="stagename center" style="margin-top:6px">休憩</div>${ringHTML('rest',0,'秒')}
         <div class="nextbox"><div class="fig">${figSVG(ex.fig)}</div><div><b>次：セット${R.set} ・ ${st.target}${unit(ex)}</b><small>前のセット：${st.results[st.results.length-1]}${unit(ex)}</small></div></div>
-        <div class="tipbox">次のセットで意識：<b>${esc(tip)}</b></div>`;
+        <div class="tipbox">次のセットで意識：<b>${esc(tip)}</b></div>${R.quiz?quizHTML(R.quiz):''}`;
+      if(R.quiz) bindQuiz(R.quiz);
       foot.innerHTML=`<div class="btnrow"><button class="btn sub" id="plusBtn">＋15秒</button><button class="btn" id="skipRest">休憩をとばす</button></div>`;
       $('#plusBtn').onclick=()=>{ if(R.timer){ R.timer.endAt+=15000; R.timer.total+=15; if(R.timer.paused) R.timer.remainMs+=15000; tick(); } };
       $('#skipRest').onclick=()=>{ const rem=timerRemain(); if(rem>restFor(ex)*0.6){ confirmBox('休憩が短すぎるかも',`まだ${rem}秒残っています。休憩が短いと次のセットの回数が落ちて、結果的に伸びにくくなります。`,'それでも進む',()=>{R.timer=null;startSet();}); } else { R.timer=null; startSet(); } };
@@ -1629,14 +1787,15 @@ function renderExec(){
   if(st.type==='done'){
     const s=R.saved; const sets=s?s.items.reduce((a,i)=>a+i.sets.length,0):0; const reps=s?s.items.reduce((a,i)=>a+i.sets.reduce((x,y)=>x+y,0),0):0;
     const dur=Math.round((Date.now()-R.startedAt)/60);
-    body.innerHTML=`<div class="summ"><div class="big pop">${R.kind==='stretch'?'🧘':'🎉'}</div><h2>${R.kind==='stretch'?'ストレッチ完了':'おつかれさま！'}</h2><p class="muted">${R.kind==='stretch'?'体をゆるめました。今日はよく寝よう。':'今日の分は終わり。あとは食べて寝れば筋肉が育ちます。'}</p></div>
+    body.innerHTML=`<div class="summ"><div class="big pop">${R.kind==='stretch'?'🧘':R.kind==='snack'?'🍪':'🎉'}</div><h2>${R.kind==='stretch'?'ストレッチ完了':R.kind==='snack'?'スナック完了！':'おつかれさま！'}</h2><p class="muted">${R.kind==='stretch'?'体をゆるめました。今日はよく寝よう。':R.kind==='snack'?'1〜2分でも積み重なる。休みの日の「ちょい足し」は回復のじゃまをしない。':'今日の分は終わり。あとは食べて寝れば筋肉が育ちます。'}</p></div>
       ${s?`<div class="stat3"><div><b>${Math.max(1,Math.round(s.dur/60))}</b><small>分</small></div><div><b>${sets}</b><small>セット</small></div><div><b>${reps}</b><small>合計${s.items.some(i=>EX_BY_ID[i.ex].kind==='time')?'回/秒':'回'}</small></div></div>`:''}
       ${s&&s.ups.length?s.ups.map(u=>`<div class="levelup pop">🆙 ${PATTERNS[u.pat].name}がレベルアップ！ → ${esc(u.to)}<small>${esc(u.msg)}</small></div>`).join(''):''}
       ${s&&s.downs.length?s.downs.map(u=>`<div class="levelup" style="border-color:var(--warn)">🔧 ${PATTERNS[u.pat].name}を一段やさしく → ${esc(u.to)}<small>「きつすぎ」が2回続いたので、フォームを固め直す作戦です</small></div>`).join(''):''}
       ${R.newBadges&&R.newBadges.length?R.newBadges.map(b=>`<div class="levelup pop" style="border-color:var(--warn)">${b.emoji} 実績「${esc(b.name)}」を獲得！<small>${esc(b.desc)}</small></div>`).join(''):''}
       ${s?`<table style="width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px">${s.items.map(i=>`<tr><td style="padding:5px 0;border-top:1px solid var(--line)">${esc(EX_BY_ID[i.ex].name)}</td><td style="padding:5px 0;border-top:1px solid var(--line);text-align:right;white-space:nowrap">${i.sets.join(' / ')}${unit(EX_BY_ID[i.ex])} ${({easy:'😎',ok:'🙂',hard:'🥵'})[i.fb]||''}</td></tr>`).join('')}</table>
       <label class="f">ひとことメモ（任意）</label><input type="text" id="noteIn" placeholder="例: 腕立てでひじが痛かった、今日は調子よかった" maxlength="80">`:''}`;
-    foot.innerHTML=`<button class="btn" id="finBtn">ホームにもどる</button>`;
+    foot.innerHTML=`${R.kind==='train'&&s?`<button class="btn sub sm mb" id="shareBtn">📤 画像でシェア・保存</button>`:''}<button class="btn" id="finBtn">ホームにもどる</button>`;
+    const shb=$('#shareBtn'); if(shb) shb.onclick=()=>shareCard('session');
     $('#finBtn').onclick=()=>{ if(s){ const n=$('#noteIn'); if(n&&n.value.trim()){ s.note=n.value.trim(); save(); } } endRun(); };
   }
 }
@@ -1648,6 +1807,11 @@ function finishSession(partial){
   if(R.kind==='stretch'){
     const sess={id:uid(),date:today,kind:'stretch',dur:Math.round((Date.now()-R.startedAt)/1000),items:[],ups:[],downs:[]};
     S.sessions.push(sess); save(); R.saved=sess; return sess;
+  }
+  if(R.kind==='snack'){
+    const items=R.stages.filter(s=>s.type==='ex'&&s.results.length).map(st=>({ex:st.ex.id,pat:st.pat,lv:st.ex.lv,sets:st.results,target:st.target,fb:st.fb||'ok'}));
+    const sess={id:uid(),date:today,t:R.startedAt,kind:'snack',dur:Math.round((Date.now()-R.startedAt)/1000),items,ups:[],downs:[]};
+    S.sessions.push(sess); R.newBadges=checkBadges(); save(); R.saved=sess; return sess;
   }
   const items=R.stages.filter(s=>s.type==='ex'&&s.results.length).map(st=>({ex:st.ex.id,pat:st.pat,lv:st.ex.lv,sets:st.results,target:st.target,fb:st.fb||'ok'}));
   const ups=[],downs=[];
@@ -1684,7 +1848,8 @@ function renderLog(){
   const report=`<div class="card tight"><h2>今週のまとめ <span class="sub">${fmtDate(ws)}〜</span></h2>
     <div class="stat3"><div><b>${rw.n}<span style="font-size:14px;color:var(--dim2)">/${S.profile.days}</span></b><small>回 ${cmp(rw.n,rp.n)}</small></div><div><b>${rw.sets}</b><small>セット ${cmp(rw.sets,rp.sets)}</small></div><div><b>${rw.ups}</b><small>レベルアップ</small></div></div>
     <div class="mt">${PAT_ORDER.map(p=>`<div class="row" style="gap:8px;padding:2px 0"><span class="tiny" style="width:48px">${PATTERNS[p].name}</span><div class="bar grow"><i style="width:${Math.round(rw.perPat[p]/maxSets*100)}%;background:${PATTERNS[p].color}"></i></div><span class="tiny" style="width:52px;text-align:right">${rw.perPat[p]}セット</span></div>`).join('')}</div>
-    <div class="tiny mt">${rw.ready!=null?`コンディション平均 ${rw.ready.toFixed(1)}/9 ・ `:''}${rw.n===0?'今週はまだ0回。1回やれば流れができる':zero.length?`今週まだ：${zero.map(p=>PATTERNS[p].name).join('・')} → 次回の型で優先されます`:'全パターンをやった週！'}</div></div>`;
+    <div class="tiny mt">${rw.ready!=null?`コンディション平均 ${rw.ready.toFixed(1)}/9 ・ `:''}${rw.n===0?'今週はまだ0回。1回やれば流れができる':zero.length?`今週まだ：${zero.map(p=>PATTERNS[p].name).join('・')} → 次回の型で優先されます`:'全パターンをやった週！'}${(()=>{const sn=S.sessions.filter(s=>s.kind==='snack'&&s.date>=ws).length; return sn?` ・ スナック${sn}回`:'';})()}</div>
+    <div class="btnrow mt"><button class="btn sub sm" id="aiReview">🤖 AIコーチのひとこと</button><button class="btn sub sm" id="shareWeek">📤 今週を画像に</button></div><div id="aiOut">${(S.aiNotes||{})[ws]?`<div class="aiout">🤖 ${esc(S.aiNotes[ws])}</div>`:''}</div></div>`;
   const badges=`<div class="card tight"><h2>実績 <span class="sub">${Object.keys(S.badges).length}/${BADGES.length}</span></h2><div class="badges">${BADGES.map(b=>`<div class="bd ${S.badges[b.id]?'on':''}"><span>${b.emoji}</span><b>${esc(b.name)}</b><small>${S.badges[b.id]?fmtDate(S.badges[b.id]):esc(b.desc)}</small></div>`).join('')}</div></div>`;
   let testCard='';
   if(S.tests.length){ const ts=[...S.tests].sort((a,b)=>a.date<b.date?-1:1).slice(-12); const latest=ts[ts.length-1]; let chart='';
@@ -1721,6 +1886,10 @@ function renderLog(){
     <div class="card tight"><h2>週ごとの回数 <span class="sub">点線＝目標</span></h2>${weekly}</div>
     <div class="card tight"><h2>いまのレベル</h2><div class="lvgrid">${PAT_ORDER.map(pat=>`<div class="lv" data-pat="${pat}" style="--pc:${PATTERNS[pat].color}"><b>${PATTERNS[pat].name}</b><span>${S.levels[pat]}</span><small>${esc(pickEx(pat).name)}</small></div>`).join('')}</div></div>
     ${testCard}${badges}
+    ${(()=>{ const kg=S.body.length?[...S.body].sort((a,b)=>a.date<b.date?-1:1).slice(-1)[0].kg:60; const tgt=Math.round(kg*1.4); const pl=(S.protein||{})[today]||[]; const sum=pl.reduce((a,x)=>a+x.g,0);
+      return `<div class="card tight"><h2>今日のたんぱく質 <span class="sub">目標 ${tgt}g（${kg}kg×1.4）</span></h2><div class="row"><div class="bar grow"><i style="width:${Math.min(100,Math.round(sum/tgt*100))}%;background:${sum>=tgt?'var(--ok)':''}"></i></div><b style="min-width:80px;text-align:right">${sum} / ${tgt}g</b></div>
+      <div class="foods">${FOODS.map((f,i)=>`<button class="food" data-i="${i}">${f.e} ${esc(f.n)}<small>${f.g}g</small></button>`).join('')}</div>
+      ${pl.length?`<div class="mt" style="display:flex;flex-wrap:wrap;gap:4px">${pl.map((x,i)=>`<span class="pill">${esc(x.n)} ${x.g}g <b class="pdel" data-i="${i}" style="cursor:pointer;margin-left:4px">×</b></span>`).join('')}</div>`:'<div class="tiny mt">食べたものをタップして足していく。プロテインは「足りないときだけ」でOK。体重を記録すると目標が自動で変わります。</div>'}</div>`; })()}
     <div class="card tight"><h2>体重 <span class="sub">任意</span></h2>${bodyChart}<div class="row mt"><input type="number" id="kgIn" step="0.1" min="20" max="200" placeholder="kg" inputmode="decimal" style="flex:1"><button class="btn xs" id="kgBtn">今日の体重を記録</button></div></div>
     <div class="card tight"><h2>履歴</h2>${hist.length?`<ul class="hist">${hist.map(s=>`<li data-id="${s.id}"><div class="hd"><b>${fmtDate(s.date)}</b>${s.kind==='stretch'?'<span class="pill info">ストレッチ</span>':`<span class="pill acc">${TEMPLATES[s.tpl]?.emoji||''} ${TEMPLATES[s.tpl]?.name||''}</span>`}${s.partial?'<span class="pill warn">途中</span>':''}${s.mode==='light'?'<span class="pill">軽め</span>':s.mode==='comeback'?'<span class="pill">久しぶり</span>':''}<span class="r">${fmtDur(s.dur)}${s.kind==='train'?' ・ '+s.items.reduce((a,i)=>a+i.sets.length,0)+'セット':''}</span></div>
       <div class="dt">${s.kind==='train'?`<table>${s.items.map(i=>`<tr><td>${esc(EX_BY_ID[i.ex]?.name||i.ex)} <span class="tiny">Lv.${i.lv}</span></td><td>${i.sets.join(' / ')}${unit(EX_BY_ID[i.ex]||{kind:'reps'})} ${({easy:'😎',ok:'🙂',hard:'🥵'})[i.fb]||''}</td></tr>`).join('')}</table>`:''}
@@ -1728,6 +1897,10 @@ function renderLog(){
       <button class="btn ghost sm mt del" data-id="${s.id}" style="width:auto;padding:6px 12px">この記録を削除</button></div></li>`).join('')}</ul>`:'<p class="tiny">まだ記録がありません。最初の1回をやってみよう。</p>'}</div>`;
   $$('#v-log .lv').forEach(b=>b.onclick=()=>openLadder(b.dataset.pat));
   const tb2=$('#testBtn2'); if(tb2) tb2.onclick=openTest;
+  $$('#v-log .food').forEach(b=>b.onclick=()=>{ const f=FOODS[+b.dataset.i]; S.protein=S.protein||{}; (S.protein[today]=S.protein[today]||[]).push({n:f.n,g:f.g}); const keys=Object.keys(S.protein).sort(); while(keys.length>40){ delete S.protein[keys.shift()]; } save(); renderLog(); });
+  $$('#v-log .pdel').forEach(b=>b.onclick=()=>{ S.protein[today].splice(+b.dataset.i,1); save(); renderLog(); });
+  $('#aiReview').onclick=()=>runAI($('#aiReview'),$('#aiOut'),aiContext()+' この1週間のふりかえりと、来週に向けたアドバイスを、ほめる→改善点1つ→ひとことの順で。',ws);
+  $('#shareWeek').onclick=()=>shareCard('week');
   $$('#v-log .hist .hd').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('open'));
   $$('#v-log .del').forEach(b=>b.onclick=e=>{ e.stopPropagation(); confirmBox('記録を削除','この記録を削除します（レベルは変わりません）。','削除する',()=>{ S.sessions=S.sessions.filter(s=>s.id!==b.dataset.id); save(); renderLog(); toast('削除しました'); },true); });
   $('#kgBtn').onclick=()=>{ const v=parseFloat($('#kgIn').value); if(!(v>20&&v<200)){toast('体重を入力してください');return;} S.body=S.body.filter(b=>b.date!==today); S.body.push({date:today,kg:Math.round(v*10)/10}); save(); renderLog(); toast('記録しました'); };
@@ -1757,6 +1930,8 @@ function renderLib(){
       ・「メニューを決める」で Lv.○ にまとめて／パターンごとに種目を選べます（今日だけ／次回以降も固定）。<br>
       ・4週で1サイクル（導入→積み上げ→強化→回復週）。開始前のコンディションが低い日は自動で軽め。痛みを登録した部位は期間中メニューから外れます。<br>
       ・3回続けて回数が伸びない種目は「停滞」として対策を提案。4週に1回のチェックテストで筋力スコアを記録します。<br>
+      ・休みの日は「スナック筋トレ」（1種目1セット）。休憩中はクイズ。じぶん人形はレベルに応じて太くなります。<br>
+      ・音声ガイド・鏡モード（カメラ）・テンポ音はすべて端末内で動きます。AIコーチだけは任意で Gemini（無料枠）を使います。<br>
       ・データはこの端末の中だけに保存されます（サーバーには送りません）。設定から書き出しできます。</div></div>`;
   }
   $('#v-lib').innerHTML=sub+html;
@@ -1790,6 +1965,10 @@ function renderSet(){
       <label class="check"><input type="checkbox" id="vibIn" ${st.vib?'checked':''}><div>バイブ<small>iPhoneのSafariでは動きません（iOSの制限）</small></div></label>
       <label class="check"><input type="checkbox" id="ciIn" ${st.checkin?'checked':''}><div>開始前にコンディションを聞く<small>睡眠・筋肉痛・気分を3タップ。低い日は自動で軽めに</small></div></label>
       <label class="check"><input type="checkbox" id="tmIn" ${st.tempo?'checked':''}><div>テンポ音<small>回数種目のセット中、「下ろす2秒・上げる1秒」を音で刻む</small></div></label>
+      <label class="check"><input type="checkbox" id="vcIn" ${st.voice?'checked':''}><div>音声ガイド（読み上げ）<small>「次はスクワット、3セット」「休憩おわり」などを声で。画面を見なくても進められる</small></div></label>
+      <label class="check"><input type="checkbox" id="mrIn" ${st.mirror?'checked':''}><div>鏡モードを最初からON<small>前カメラで自分の形をお手本と見くらべる（写真は保存しない）</small></div></label>
+      <label class="f">メニューの型</label>${choice('split',[['auto','自動'],['full','全身 A/B/C'],['ul','上半身/下半身']],st.split||'auto')}
+      <div class="tiny">自動＝週4回設定か9週目以降で上下分割に切り替え。分割は1回の部位が絞れるぶん、各部位を週2回ずつ回せます。</div>
       <label class="f">見た目</label>${choice('theme',[['dark','🌙 ダーク'],['light','☀️ ライト']],st.theme)}
     </div>
     <div class="card tight"><h2>レベルを手動で調整</h2><p class="tiny">ふだんは自動で上下しますが、「もっと簡単から始めたい」「前からやってたので上げたい」ときはここで。</p>
@@ -1799,6 +1978,17 @@ function renderSet(){
       <div class="btnrow"><button class="btn sub sm" id="dlOn" ${pw.phase===3?'disabled':''}>今週を回復週にする</button><button class="btn sub sm" id="dlOff" ${pw.phase===3?'':'disabled'}>回復週をやめる</button></div>
       <div class="btnrow mt"><button class="btn sub sm" id="painBtn">🩹 痛いところを登録</button><button class="btn sub sm" id="testBtn3">📏 チェックテスト</button></div>
       ${activePain().length?`<div class="tiny mt">登録中：${activePain().map(x=>PAIN_PARTS[x.part].name+'（あと'+(x.days-daysBetween(x.from,dkey()))+'日）').join('、')}</div>`:''}
+    </div>
+    <div class="card tight"><h2>リマインダー</h2><p class="tiny">Webアプリは自分から通知を出せないので、<b>カレンダーに繰り返し予定</b>を入れて通知してもらいます。曜日と時刻を選んで「.ics を作る」→ 開いてカレンダーに追加。</p>
+      <div class="daysel">${['日','月','火','水','木','金','土'].map((d,i)=>`<button data-d="${i}" aria-pressed="${(st.remDays||[]).includes(i)}">${d}</button>`).join('')}</div>
+      <div class="row mt"><input type="time" id="remTime" value="${esc(st.remTime||'19:00')}" style="flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:16px"><button class="btn sub xs" id="icsBtn">📅 .ics を作る</button></div>
+      <div class="tiny mt">アプリは「やる日／休む日」を自動で決めるので、リマインダーは「アプリを開く時間」として毎回同じでOK。</div>
+    </div>
+    <div class="card tight"><h2>AIコーチ（任意）</h2><p class="tiny">Google の Gemini を使って、週のふりかえりコメントや種目の質問に答えます。<b>無料枠</b>で動きます（1日の回数に上限あり）。キーはこの端末の中にだけ保存され、アプリの他の機能はキーなしで全部動きます。</p>
+      <label class="f">Gemini APIキー</label><input type="password" id="gkIn" value="${esc(st.geminiKey||'')}" placeholder="AIza… （空ならAI機能はオフ）" autocomplete="off">
+      <label class="f">モデル</label>${choice('geminiModel',[['gemini-2.5-flash-lite','flash-lite（速い・無料枠が多い）'],['gemini-2.5-flash','flash（少し賢い）']],st.geminiModel||'gemini-2.5-flash-lite')}
+      <details class="acc"><summary style="font-size:13.5px">キーの取り方（無料・1分）</summary><div class="bd">① <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> を Google アカウントで開く<br>② 「APIキーを作成」→ 表示された「AIza…」で始まる文字列をコピー<br>③ 上の欄に貼り付ける。APIキー＝AIに頼むためのパスワードなので、人に見せない</div></details>
+      <div class="row mt"><button class="btn sub xs" id="gkTest">接続テスト</button></div><div id="gkOut"></div>
     </div>
     <div class="card tight"><h2>データ</h2><p class="tiny">すべてこの端末の中に保存されています。機種変更のときは書き出し→読み込みで引っこし。</p>
       <div class="btnrow"><button class="btn sub sm" id="expBtn">書き出し</button><button class="btn sub sm" id="impBtn">読み込み</button></div><input type="file" id="impFile" accept="application/json" style="display:none">
@@ -1816,6 +2006,13 @@ function renderSet(){
   $('#sndIn').onchange=e=>{S.settings.sound=e.target.checked;save();};
   $('#ciIn').onchange=e=>{S.settings.checkin=e.target.checked;save();};
   $('#tmIn').onchange=e=>{S.settings.tempo=e.target.checked;save();};
+  $('#vcIn').onchange=e=>{S.settings.voice=e.target.checked;save(); if(e.target.checked){ audioInit(); speak('音声ガイドをオンにしました'); }};
+  $('#mrIn').onchange=e=>{S.settings.mirror=e.target.checked;save();};
+  $$('#v-set .daysel button').forEach(b=>b.onclick=()=>{ const d=+b.dataset.d; const arr=S.settings.remDays||[]; S.settings.remDays=arr.includes(d)?arr.filter(x=>x!==d):[...arr,d].sort(); save(); renderSet(); });
+  $('#remTime').onchange=e=>{S.settings.remTime=e.target.value||'19:00';save();};
+  $('#icsBtn').onclick=makeICS;
+  $('#gkIn').onchange=e=>{S.settings.geminiKey=e.target.value.trim();save();toast(S.settings.geminiKey?'APIキーを保存しました（この端末だけ）':'APIキーを消しました');};
+  $('#gkTest').onclick=async()=>{ const o=$('#gkOut'); await runAI($('#gkTest'),o,'自己紹介を1文で。'); };
   $('#dlOn').onclick=()=>{ const ws=weekStart(dkey()); if(!S.program.deload.includes(ws)) S.program.deload.push(ws); S.program.skipDeload=S.program.skipDeload.filter(w=>w!==ws); save(); H.tpl=null; renderSet(); toast('今週を回復週にしました'); };
   $('#dlOff').onclick=()=>{ const ws=weekStart(dkey()); S.program.deload=S.program.deload.filter(w=>w!==ws); if(!S.program.skipDeload.includes(ws)) S.program.skipDeload.push(ws); save(); H.tpl=null; renderSet(); toast('今週は通常の週にしました'); };
   $('#painBtn').onclick=openPain; $('#testBtn3').onclick=openTest;
